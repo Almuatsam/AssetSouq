@@ -1,0 +1,172 @@
+// Prisma schema for the IT Asset Disposal & Employee Raffle System.
+// Modeled directly from docs/04-Backend-Schema.md.
+//
+// Business rules (PRD "Business Rules" section) are intentionally NOT
+// encoded as hard DB constraints beyond the obvious uniques (staffNumber,
+// assetTag, email, username) — eligibility must be evaluated together
+// against a single employee in the service layer, not piecemeal via
+// column constraints. See docs/01-PRD.md.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id             Int       @id @default(autoincrement())
+  staffNumber    String    @unique
+  name           String
+  department     String
+  email          String    @unique
+  active         Boolean   @default(true)
+  laptopHolder   Boolean   @default(false)
+  lastWinnerDate DateTime?
+  eligible       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  registrations  Registration[]
+  winners        Winner[]
+
+  @@index([active])
+}
+
+model Device {
+  id           Int          @id @default(autoincrement())
+  assetTag     String       @unique
+  deviceType   String
+  brand        String
+  model        String
+  cpu          String?
+  ram          String?
+  storage      String?
+  purchaseYear Int?
+  yearsUsed    Int?
+  price        Decimal      @db.Decimal(10, 2)
+  status       DeviceStatus @default(AVAILABLE)
+  quantity     Int          @default(1)
+  createdAt    DateTime     @default(now())
+
+  registrations Registration[]
+  winners       Winner[]
+  draws         Draw[]
+
+  @@index([status])
+}
+
+enum DeviceStatus {
+  AVAILABLE
+  REMOVED
+  DRAWN
+  SOLD
+}
+
+model Registration {
+  id          Int                @id @default(autoincrement())
+  employeeId  Int
+  deviceId    Int
+  agreed      Boolean            @default(false)
+  submittedAt DateTime           @default(now())
+  status      RegistrationStatus @default(PENDING)
+
+  employee    Employee @relation(fields: [employeeId], references: [id])
+  device      Device   @relation(fields: [deviceId], references: [id])
+
+  // "One Registration Per Employee" / "One Device Per Employee" (PRD
+  // business rules 2 & 5) are enforced in the service layer alongside the
+  // rest of the eligibility check, not as a DB unique constraint here —
+  // see docs/01-PRD.md note on evaluating rules together.
+  @@index([employeeId])
+  @@index([deviceId])
+}
+
+enum RegistrationStatus {
+  PENDING
+  ELIGIBLE
+  INELIGIBLE
+  WITHDRAWN
+}
+
+model Winner {
+  id            Int           @id @default(autoincrement())
+  employeeId    Int
+  deviceId      Int
+  drawId        Int?
+  drawDate      DateTime      @default(now())
+  accepted      Boolean       @default(false)
+  priceDue      Decimal       @db.Decimal(10, 2)
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentDate   DateTime?
+  paymentMethod String?
+  handoverDate  DateTime?
+  redrawOf      Int?
+  redrawReason  RedrawReason?
+
+  employee       Employee @relation(fields: [employeeId], references: [id])
+  device         Device   @relation(fields: [deviceId], references: [id])
+  draw           Draw?    @relation(fields: [drawId], references: [id])
+  redrawOfWinner Winner?  @relation("WinnerRedraws", fields: [redrawOf], references: [id])
+  redraws        Winner[] @relation("WinnerRedraws")
+
+  @@index([employeeId])
+  @@index([deviceId])
+  @@index([paymentStatus])
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  NON_PAYMENT
+}
+
+enum RedrawReason {
+  DECLINED
+  NON_PAYMENT
+  NO_SHOW
+  ADMIN_OVERRIDE
+}
+
+// Own table (not in the original schema list) so multi-winner draws and
+// their audit trail (RNG seed + candidate pool) have somewhere to live
+// beyond the per-winner rows — see docs/04-Backend-Schema.md note.
+model Draw {
+  id                    Int      @id @default(autoincrement())
+  deviceId              Int
+  rngSeed               String
+  candidatePoolSnapshot Json
+  drawnAt               DateTime @default(now())
+  drawnByAdminId        Int
+
+  device       Device   @relation(fields: [deviceId], references: [id])
+  drawnByAdmin Admin    @relation(fields: [drawnByAdminId], references: [id])
+  winners      Winner[]
+
+  @@index([deviceId])
+}
+
+model Admin {
+  id           Int       @id @default(autoincrement())
+  username     String    @unique
+  passwordHash String
+  lastLogin    DateTime?
+
+  draws     Draw[]
+  auditLogs AuditLog[]
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  adminId   Int?
+  action    String
+  entity    String
+  entityId  Int
+  timestamp DateTime @default(now())
+
+  admin Admin? @relation(fields: [adminId], references: [id])
+
+  @@index([entity, entityId])
+}

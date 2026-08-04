@@ -1,0 +1,10 @@
+{
+  "app": {
+    "name": "AssetSouq"
+  },
+  "common": {
+    "loading": "Loading...",
+    "submit": "Submit",
+    "cancel": "Cancel"
+  }
+}
