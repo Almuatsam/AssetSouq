@@ -5,6 +5,30 @@
   "common": {
     "loading": "Loading...",
     "submit": "Submit",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "logout": "Log out",
+    "error": "Something went wrong. Please try again."
+  },
+  "landing": {
+    "tagline": "IT Asset Disposal & Employee Raffle",
+    "employeeCta": "Employee Login",
+    "adminCta": "Admin Login"
+  },
+  "auth": {
+    "employeeLoginTitle": "Employee Login",
+    "adminLoginTitle": "Admin Login",
+    "staffId": "Staff ID",
+    "username": "Username",
+    "password": "Password",
+    "login": "Log In",
+    "loggingIn": "Logging in..."
+  },
+  "devices": {
+    "welcome": "Welcome, {{name}}",
+    "comingSoon": "Available devices will appear here soon."
+  },
+  "adminDashboard": {
+    "welcome": "Welcome, {{username}}",
+    "comingSoon": "The admin dashboard is coming soon."
   }
 }

@@ -11,6 +11,12 @@ dist/
 build/
 *.tsbuildinfo
 
+# tsc -b output for frontend/tsconfig.node.json (composite:true requires
+# emit, so these land next to vite.config.ts even though nothing consumes
+# them — Vite loads vite.config.ts directly, not this compiled output)
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
 # Prisma
 backend/prisma/migrations/dev.db
 backend/generated/

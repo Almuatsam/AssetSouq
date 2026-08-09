@@ -5,6 +5,30 @@
   "common": {
     "loading": "جارٍ التحميل...",
     "submit": "إرسال",
-    "cancel": "إلغاء"
+    "cancel": "إلغاء",
+    "logout": "تسجيل الخروج",
+    "error": "حدث خطأ ما. حاول مرة أخرى."
+  },
+  "landing": {
+    "tagline": "التخلص من أصول تقنية المعلومات وسحب الموظفين",
+    "employeeCta": "دخول الموظفين",
+    "adminCta": "دخول المسؤول"
+  },
+  "auth": {
+    "employeeLoginTitle": "تسجيل دخول الموظف",
+    "adminLoginTitle": "تسجيل دخول المسؤول",
+    "staffId": "الرقم الوظيفي",
+    "username": "اسم المستخدم",
+    "password": "كلمة المرور",
+    "login": "تسجيل الدخول",
+    "loggingIn": "جارٍ تسجيل الدخول..."
+  },
+  "devices": {
+    "welcome": "مرحباً، {{name}}",
+    "comingSoon": "ستظهر الأجهزة المتاحة هنا قريباً."
+  },
+  "adminDashboard": {
+    "welcome": "مرحباً، {{username}}",
+    "comingSoon": "لوحة تحكم المسؤول قريباً."
   }
 }
