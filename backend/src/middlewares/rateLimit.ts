@@ -1,4 +1,5 @@
 import rateLimit from "express-rate-limit";
+import type { Request } from "express";
 
 // Both login endpoints identify a principal by something an attacker can
 // guess (staff ID) or brute-force (password) — throttle hard per IP.
@@ -18,3 +19,29 @@ function createLoginRateLimiter() {
 
 export const employeeLoginRateLimiter = createLoginRateLimiter();
 export const adminLoginRateLimiter = createLoginRateLimiter();
+
+// Authenticated routes: key by the signed-in user (not just IP) so this
+// actually bounds what one identity can do — IP-only would still let a
+// single employee behind a shared corporate NAT collapse into one bucket
+// with everyone else on that egress point (same class of issue as the
+// login limiters' trust-proxy config). Falls back to IP only in the
+// (practically unreachable, since these routes require authenticate()
+// first) case req.user is somehow missing.
+export const registrationRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: Request) => (req.user ? `user:${req.user.id}` : `ip:${req.ip ?? "unknown"}`),
+  message: { success: false, error: "Too many requests. Please try again later." },
+});
+
+// Read-only, no side effects — a generous ceiling just to stop naive
+// scripted abuse, not to bound legitimate browsing.
+export const deviceRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests. Please try again later." },
+});
