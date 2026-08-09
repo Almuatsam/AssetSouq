@@ -1,0 +1,29 @@
+# Local development infrastructure for AssetSouq. Not used for production
+# deployment (see docs/06-Engineering-Plan.md Phase 7 for that).
+#
+# Credentials come from the repo-root .env (gitignored, never committed).
+# Host port 3306 is already taken by a local MySQL Windows service, and
+# 3307 by another project's container on this machine, so this maps to
+# 3308 instead — see backend/.env's DATABASE_URL.
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: assetsouq-mysql-dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: assetsouq_dev
+      MYSQL_USER: assetsouq
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3308:3306"
+    volumes:
+      - assetsouq_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  assetsouq_mysql_data:

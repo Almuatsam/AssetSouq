@@ -23,6 +23,28 @@ See [`docs/`](docs/) for the full planning set:
 
 ## Getting Started
 
+### Database (local dev)
+
+A `docker-compose.yml` at the repo root runs a throwaway MySQL container
+for local development, so it doesn't touch any MySQL you already have
+installed:
+
+```bash
+cp .env.example .env   # generate your own MYSQL_ROOT_PASSWORD / MYSQL_PASSWORD
+docker compose up -d   # MySQL on localhost:3308 — see docker-compose.yml
+                        # for why not 3306/3307 (both may already be in use)
+```
+
+Point `backend/.env`'s `DATABASE_URL` at the same credentials/port.
+`prisma migrate dev` needs `CREATE DATABASE` privileges for its shadow
+database, so grant the app user broader rights once (safe here — it's an
+isolated dev-only container):
+
+```bash
+docker exec assetsouq-mysql-dev mysql -u root -p"$MYSQL_ROOT_PASSWORD" \
+  -e "GRANT ALL PRIVILEGES ON *.* TO 'assetsouq'@'%'; FLUSH PRIVILEGES;"
+```
+
 ### Backend
 
 ```bash
