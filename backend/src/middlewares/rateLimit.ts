@@ -52,6 +52,12 @@ export const adminDeviceWriteRateLimiter = createUserKeyedRateLimiter(60);
 // issue the login limiters' own comment above already calls out).
 export const adminDeviceReadRateLimiter = createUserKeyedRateLimiter(120);
 
+// Same rationale as the admin device limiters above — separate instances
+// per admin resource so heavy traffic on one (e.g. a bulk employee import
+// in a future phase) can't exhaust the budget that protects another.
+export const adminEmployeeWriteRateLimiter = createUserKeyedRateLimiter(60);
+export const adminEmployeeReadRateLimiter = createUserKeyedRateLimiter(120);
+
 // Read-only, no side effects — a generous ceiling just to stop naive
 // scripted abuse, not to bound legitimate browsing.
 export const deviceRateLimiter = rateLimit({

@@ -13,7 +13,7 @@ import { registrationRepository } from "../src/repositories/registrationReposito
 jest.mock("../src/config/prisma", () => ({
   prisma: {
     admin: { findUnique: jest.fn(), update: jest.fn() },
-    employee: { findUnique: jest.fn() },
+    employee: { findUnique: jest.fn(), findMany: jest.fn(), create: jest.fn(), update: jest.fn() },
     device: { findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
     registration: { findFirst: jest.fn(), create: jest.fn() },
   },
@@ -21,7 +21,7 @@ jest.mock("../src/config/prisma", () => ({
 
 const mockedPrisma = prisma as unknown as {
   admin: { findUnique: jest.Mock; update: jest.Mock };
-  employee: { findUnique: jest.Mock };
+  employee: { findUnique: jest.Mock; findMany: jest.Mock; create: jest.Mock; update: jest.Mock };
   device: { findMany: jest.Mock; findUnique: jest.Mock; create: jest.Mock; update: jest.Mock };
   registration: { findFirst: jest.Mock; create: jest.Mock };
 };
@@ -64,6 +64,86 @@ describe("employeeRepository", () => {
 
     // Assert
     expect(mockedPrisma.employee.findUnique).toHaveBeenCalledWith({ where: { id: 1 } });
+  });
+
+  it("findByEmail() queries by email", async () => {
+    // Act
+    await employeeRepository.findByEmail("jane.doe@example.com");
+
+    // Assert
+    expect(mockedPrisma.employee.findUnique).toHaveBeenCalledWith({
+      where: { email: "jane.doe@example.com" },
+    });
+  });
+
+  it("findAll() queries with no filter by default, newest first", async () => {
+    // Act
+    await employeeRepository.findAll({});
+
+    // Assert
+    expect(mockedPrisma.employee.findMany).toHaveBeenCalledWith({
+      where: { active: undefined, eligible: undefined, laptopHolder: undefined, department: undefined },
+      orderBy: { createdAt: "desc" },
+    });
+  });
+
+  it("findAll() filters by active/eligible/laptopHolder/department when given", async () => {
+    // Act
+    await employeeRepository.findAll({
+      active: true,
+      eligible: false,
+      laptopHolder: true,
+      department: "Engineering",
+    });
+
+    // Assert
+    expect(mockedPrisma.employee.findMany).toHaveBeenCalledWith({
+      where: { active: true, eligible: false, laptopHolder: true, department: "Engineering" },
+      orderBy: { createdAt: "desc" },
+    });
+  });
+
+  it("findAll() adds an OR search across name/staffNumber/email when a search term is given", async () => {
+    // Act
+    await employeeRepository.findAll({ search: "Jane" });
+
+    // Assert
+    expect(mockedPrisma.employee.findMany).toHaveBeenCalledWith({
+      where: {
+        active: undefined,
+        eligible: undefined,
+        laptopHolder: undefined,
+        department: undefined,
+        OR: [
+          { name: { contains: "Jane" } },
+          { staffNumber: { contains: "Jane" } },
+          { email: { contains: "Jane" } },
+        ],
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  });
+
+  it("create() persists a new employee", async () => {
+    // Arrange
+    const data = { staffNumber: "S1002", name: "John Smith", department: "Sales", email: "john@example.com" };
+
+    // Act
+    await employeeRepository.create(data as never);
+
+    // Assert
+    expect(mockedPrisma.employee.create).toHaveBeenCalledWith({ data });
+  });
+
+  it("update() updates the given employee by id", async () => {
+    // Act
+    await employeeRepository.update(1, { active: false });
+
+    // Assert
+    expect(mockedPrisma.employee.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { active: false },
+    });
   });
 });
 
