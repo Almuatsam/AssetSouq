@@ -63,6 +63,53 @@
   },
   "adminDashboard": {
     "welcome": "Welcome, {{username}}",
-    "comingSoon": "The admin dashboard is coming soon."
+    "comingSoon": "More of the admin dashboard is coming soon.",
+    "manageDevices": "Manage Devices"
+  },
+  "deviceStatus": {
+    "AVAILABLE": "Available",
+    "REMOVED": "Removed",
+    "DRAWN": "Drawn",
+    "SOLD": "Sold"
+  },
+  "adminDevices": {
+    "title": "Manage Devices",
+    "subtitle": "Create, edit, and remove devices available for the raffle.",
+    "addDevice": "Add Device",
+    "filterLabel": "Status",
+    "filterAll": "All",
+    "empty": "No devices found.",
+    "loadError": "Couldn't load devices. Please try again.",
+    "assetTag": "Asset Tag",
+    "device": "Device",
+    "price": "Price",
+    "status": "Status",
+    "actions": "Actions",
+    "edit": "Edit",
+    "remove": "Remove",
+    "restore": "Restore",
+    "confirmRemove": "Remove this device? Employees will no longer be able to register interest in it.",
+    "confirmRestore": "Restore this device to Available?",
+    "actionError": "Couldn't complete that action. Please try again."
+  },
+  "adminDeviceForm": {
+    "createTitle": "Add Device",
+    "editTitle": "Edit Device",
+    "assetTag": "Asset Tag",
+    "deviceType": "Device Type",
+    "brand": "Brand",
+    "model": "Model",
+    "cpu": "CPU",
+    "ram": "RAM",
+    "storage": "Storage",
+    "purchaseYear": "Purchase Year",
+    "yearsUsed": "Years Used",
+    "price": "Price",
+    "quantity": "Quantity",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "notFound": "Device not found.",
+    "loadError": "Couldn't load this device. Please try again."
   }
 }

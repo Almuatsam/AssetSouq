@@ -44,4 +44,28 @@ describe("App routing", () => {
     // Assert
     expect(screen.getByRole("heading", { name: /admin login/i })).toBeInTheDocument();
   });
+
+  it("redirects an unauthenticated visitor away from /admin/devices to /admin/login", () => {
+    // Act
+    renderWithProviders(<App />, { route: "/admin/devices" });
+
+    // Assert
+    expect(screen.getByRole("heading", { name: /admin login/i })).toBeInTheDocument();
+  });
+
+  it("redirects an unauthenticated visitor away from /admin/devices/new to /admin/login", () => {
+    // Act
+    renderWithProviders(<App />, { route: "/admin/devices/new" });
+
+    // Assert
+    expect(screen.getByRole("heading", { name: /admin login/i })).toBeInTheDocument();
+  });
+
+  it("redirects an unauthenticated visitor away from /admin/devices/:id/edit to /admin/login", () => {
+    // Act
+    renderWithProviders(<App />, { route: "/admin/devices/1/edit" });
+
+    // Assert
+    expect(screen.getByRole("heading", { name: /admin login/i })).toBeInTheDocument();
+  });
 });

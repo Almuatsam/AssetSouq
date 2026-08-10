@@ -63,6 +63,53 @@
   },
   "adminDashboard": {
     "welcome": "مرحباً، {{username}}",
-    "comingSoon": "لوحة تحكم المسؤول قريباً."
+    "comingSoon": "بقية لوحة تحكم المسؤول قريباً.",
+    "manageDevices": "إدارة الأجهزة"
+  },
+  "deviceStatus": {
+    "AVAILABLE": "متاح",
+    "REMOVED": "مُزال",
+    "DRAWN": "تم السحب",
+    "SOLD": "تم البيع"
+  },
+  "adminDevices": {
+    "title": "إدارة الأجهزة",
+    "subtitle": "إنشاء وتعديل وإزالة الأجهزة المتاحة للسحب.",
+    "addDevice": "إضافة جهاز",
+    "filterLabel": "الحالة",
+    "filterAll": "الكل",
+    "empty": "لا توجد أجهزة.",
+    "loadError": "تعذر تحميل الأجهزة. حاول مرة أخرى.",
+    "assetTag": "الرقم التعريفي",
+    "device": "الجهاز",
+    "price": "السعر",
+    "status": "الحالة",
+    "actions": "الإجراءات",
+    "edit": "تعديل",
+    "remove": "إزالة",
+    "restore": "استعادة",
+    "confirmRemove": "إزالة هذا الجهاز؟ لن يتمكن الموظفون بعد الآن من تسجيل اهتمامهم به.",
+    "confirmRestore": "استعادة هذا الجهاز ليصبح متاحاً؟",
+    "actionError": "تعذر إتمام هذا الإجراء. حاول مرة أخرى."
+  },
+  "adminDeviceForm": {
+    "createTitle": "إضافة جهاز",
+    "editTitle": "تعديل الجهاز",
+    "assetTag": "الرقم التعريفي",
+    "deviceType": "نوع الجهاز",
+    "brand": "الماركة",
+    "model": "الطراز",
+    "cpu": "المعالج",
+    "ram": "الذاكرة العشوائية",
+    "storage": "سعة التخزين",
+    "purchaseYear": "سنة الشراء",
+    "yearsUsed": "سنوات الاستخدام",
+    "price": "السعر",
+    "quantity": "الكمية",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ...",
+    "cancel": "إلغاء",
+    "notFound": "الجهاز غير موجود.",
+    "loadError": "تعذر تحميل بيانات الجهاز. حاول مرة أخرى."
   }
 }

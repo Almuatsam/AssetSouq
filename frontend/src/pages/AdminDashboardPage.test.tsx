@@ -38,4 +38,21 @@ describe("AdminDashboardPage", () => {
     // Assert
     expect(getStoredSession()).toBeNull();
   });
+
+  it("links to the device management page", () => {
+    // Arrange
+    setStoredSession({
+      token: "tok",
+      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null } },
+    });
+
+    // Act
+    renderWithProviders(<AdminDashboardPage />);
+
+    // Assert
+    expect(screen.getByRole("link", { name: /manage devices/i })).toHaveAttribute(
+      "href",
+      "/admin/devices",
+    );
+  });
 });

@@ -2,6 +2,8 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import AdminDeviceFormPage from "@/pages/AdminDeviceFormPage";
+import AdminDevicesPage from "@/pages/AdminDevicesPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
 import DeviceDetailPage from "@/pages/DeviceDetailPage";
 import DevicesPage from "@/pages/DevicesPage";
@@ -36,6 +38,30 @@ export default function App() {
         element={
           <ProtectedRoute requiredRole="ADMIN" redirectTo="/admin/login">
             <AdminDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/devices"
+        element={
+          <ProtectedRoute requiredRole="ADMIN" redirectTo="/admin/login">
+            <AdminDevicesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/devices/new"
+        element={
+          <ProtectedRoute requiredRole="ADMIN" redirectTo="/admin/login">
+            <AdminDeviceFormPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/devices/:id/edit"
+        element={
+          <ProtectedRoute requiredRole="ADMIN" redirectTo="/admin/login">
+            <AdminDeviceFormPage />
           </ProtectedRoute>
         }
       />
