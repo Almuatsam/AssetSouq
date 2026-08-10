@@ -19,6 +19,29 @@ const baseEmployee = {
   updatedAt: new Date(),
 };
 
+describe("employeeService.getById", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("returns the employee when found", async () => {
+    // Arrange
+    mockedEmployeeRepo.findById.mockResolvedValue(baseEmployee as never);
+
+    // Act
+    const result = await employeeService.getById(1);
+
+    // Assert
+    expect(result).toEqual(baseEmployee);
+  });
+
+  it("throws a 404 AppError when the employee doesn't exist", async () => {
+    // Arrange
+    mockedEmployeeRepo.findById.mockResolvedValue(null);
+
+    // Act / Assert
+    await expect(employeeService.getById(999)).rejects.toMatchObject({ statusCode: 404 });
+  });
+});
+
 describe("employeeService.listAll", () => {
   beforeEach(() => jest.clearAllMocks());
 

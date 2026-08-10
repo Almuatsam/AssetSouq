@@ -90,6 +90,67 @@ describe("GET /api/admin/employees", () => {
   });
 });
 
+describe("GET /api/admin/employees/:id", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("requires authentication", async () => {
+    // Act
+    const res = await request(app).get("/api/admin/employees/1");
+
+    // Assert
+    expect(res.status).toBe(401);
+  });
+
+  it("is not available to employees", async () => {
+    // Act
+    const res = await request(app)
+      .get("/api/admin/employees/1")
+      .set("Authorization", `Bearer ${employeeToken}`);
+
+    // Assert
+    expect(res.status).toBe(403);
+  });
+
+  it("returns the employee for an authenticated admin", async () => {
+    // Arrange
+    mockedEmployeeService.getById.mockResolvedValue(baseEmployee as never);
+
+    // Act
+    const res = await request(app)
+      .get("/api/admin/employees/1")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    // Assert
+    expect(res.status).toBe(200);
+    expect(res.body.data.employee.staffNumber).toBe("S1001");
+    expect(mockedEmployeeService.getById).toHaveBeenCalledWith(1);
+  });
+
+  it("returns 404 when the employee doesn't exist", async () => {
+    // Arrange
+    mockedEmployeeService.getById.mockRejectedValue(new AppError(404, "Employee not found"));
+
+    // Act
+    const res = await request(app)
+      .get("/api/admin/employees/999")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    // Assert
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 400 for a non-numeric id", async () => {
+    // Act
+    const res = await request(app)
+      .get("/api/admin/employees/not-a-number")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    // Assert
+    expect(res.status).toBe(400);
+    expect(mockedEmployeeService.getById).not.toHaveBeenCalled();
+  });
+});
+
 describe("POST /api/admin/employees", () => {
   const validPayload = {
     staffNumber: "S1002",

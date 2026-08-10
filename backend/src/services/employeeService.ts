@@ -12,6 +12,18 @@ export const employeeService = {
     return employeeRepository.findAll(filters);
   },
 
+  // Employees have no public-facing single-record endpoint to reuse the
+  // way admin device edit reuses GET /devices/:id — this exists so the
+  // admin edit form can prefill correctly on a direct/bookmarked/refreshed
+  // navigation, not just when arriving from an already-loaded list.
+  async getById(id: number): Promise<Employee> {
+    const employee = await employeeRepository.findById(id);
+    if (!employee) {
+      throw new AppError(404, "Employee not found");
+    }
+    return employee;
+  },
+
   async createEmployee(data: CreateEmployeeInput): Promise<Employee> {
     const [staffNumberTaken, emailTaken] = await Promise.all([
       employeeRepository.findByStaffNumber(data.staffNumber),

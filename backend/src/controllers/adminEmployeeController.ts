@@ -19,6 +19,16 @@ export const adminEmployeeController = {
     }
   },
 
+  async getById(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = idParamSchema.parse(req.params);
+      const employee = await employeeService.getById(id);
+      res.json({ success: true, data: { employee } });
+    } catch (err) {
+      next(err);
+    }
+  },
+
   async create(req: Request, res: Response, next: NextFunction) {
     try {
       const input = createEmployeeSchema.parse(req.body);

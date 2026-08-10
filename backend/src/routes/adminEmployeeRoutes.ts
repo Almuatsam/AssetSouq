@@ -8,6 +8,7 @@ const router = Router();
 
 router.use(authenticate, requireRole("ADMIN"));
 router.get("/", adminEmployeeReadRateLimiter, adminEmployeeController.list);
+router.get("/:id", adminEmployeeReadRateLimiter, adminEmployeeController.getById);
 router.post("/", adminEmployeeWriteRateLimiter, adminEmployeeController.create);
 router.patch("/:id", adminEmployeeWriteRateLimiter, adminEmployeeController.update);
 
