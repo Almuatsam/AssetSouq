@@ -44,28 +44,16 @@ describe("authService.loginEmployee", () => {
     expect(mockedPost).toHaveBeenCalledWith("/auth/employee/login", { staffNumber: "S1" });
   });
 
+  // Error-normalization branches (network failure, generic error, etc.)
+  // are covered exhaustively in services/apiError.test.ts — this just
+  // confirms loginEmployee actually routes its rejection through that
+  // shared helper.
   it("surfaces the backend's error message", async () => {
     // Arrange
     mockedPost.mockRejectedValue(axiosErrorWith({ success: false, error: "Invalid staff ID" }));
 
     // Act / Assert
     await expect(authService.loginEmployee("nope")).rejects.toThrow("Invalid staff ID");
-  });
-
-  it("falls back to a generic message on network failure", async () => {
-    // Arrange
-    mockedPost.mockRejectedValue(axiosErrorWith(undefined, "ERR_NETWORK"));
-
-    // Act / Assert
-    await expect(authService.loginEmployee("S1")).rejects.toThrow(/reach the server/i);
-  });
-
-  it("falls back to a generic message for unexpected errors", async () => {
-    // Arrange
-    mockedPost.mockRejectedValue(new Error("boom"));
-
-    // Act / Assert
-    await expect(authService.loginEmployee("S1")).rejects.toThrow(/went wrong/i);
   });
 });
 

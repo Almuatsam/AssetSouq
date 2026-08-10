@@ -24,8 +24,42 @@
     "loggingIn": "Logging in..."
   },
   "devices": {
-    "welcome": "Welcome, {{name}}",
-    "comingSoon": "Available devices will appear here soon."
+    "greeting": "Welcome, {{name}}",
+    "title": "Available Devices",
+    "empty": "No devices are available right now. Check back soon.",
+    "loadError": "Couldn't load the device list. Please try again.",
+    "priceLabel": "Price",
+    "viewDetails": "View Details"
+  },
+  "deviceDetail": {
+    "cpu": "CPU",
+    "ram": "RAM",
+    "storage": "Storage",
+    "purchaseYear": "Purchase Year",
+    "yearsUsed": "Years Used",
+    "notAvailable": "This device isn't available for registration anymore.",
+    "loadError": "Couldn't load this device. Please try again.",
+    "termsTitle": "Terms & Conditions",
+    "termsAsIs": "This device is sold as-is, with no warranty.",
+    "termsNoSupport": "No technical support is provided after handover.",
+    "termsFactoryReset": "The device will be factory reset before handover.",
+    "termsApproval": "Handover requires management approval and full payment of the listed price.",
+    "agreeLabel": "I have read and agree to the Terms & Conditions",
+    "registerCta": "Register Interest",
+    "registering": "Submitting..."
+  },
+  "registrationStatus": {
+    "title": "Your Registration",
+    "subtitle": "You already have an active registration — you can only register interest in one device at a time.",
+    "device": "Device",
+    "price": "Price",
+    "status": "Status",
+    "statusValues": {
+      "PENDING": "Pending",
+      "ELIGIBLE": "Eligible — awaiting draw",
+      "INELIGIBLE": "Ineligible",
+      "WITHDRAWN": "Withdrawn"
+    }
   },
   "adminDashboard": {
     "welcome": "Welcome, {{username}}",

@@ -29,6 +29,14 @@ describe("App routing", () => {
     expect(screen.getByRole("heading", { name: /employee login/i })).toBeInTheDocument();
   });
 
+  it("redirects an unauthenticated visitor away from /devices/:id to /login", () => {
+    // Act
+    renderWithProviders(<App />, { route: "/devices/1" });
+
+    // Assert
+    expect(screen.getByRole("heading", { name: /employee login/i })).toBeInTheDocument();
+  });
+
   it("redirects an unauthenticated visitor away from /admin/dashboard to /admin/login", () => {
     // Act
     renderWithProviders(<App />, { route: "/admin/dashboard" });

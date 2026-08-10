@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
+import DeviceDetailPage from "@/pages/DeviceDetailPage";
 import DevicesPage from "@/pages/DevicesPage";
 import EmployeeLoginPage from "@/pages/EmployeeLoginPage";
 import LandingPage from "@/pages/LandingPage";
@@ -19,6 +20,14 @@ export default function App() {
         element={
           <ProtectedRoute requiredRole="EMPLOYEE" redirectTo="/login">
             <DevicesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/devices/:id"
+        element={
+          <ProtectedRoute requiredRole="EMPLOYEE" redirectTo="/login">
+            <DeviceDetailPage />
           </ProtectedRoute>
         }
       />
