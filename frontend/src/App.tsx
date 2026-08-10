@@ -4,6 +4,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import AdminDeviceFormPage from "@/pages/AdminDeviceFormPage";
 import AdminDevicesPage from "@/pages/AdminDevicesPage";
+import AdminEmployeeFormPage from "@/pages/AdminEmployeeFormPage";
+import AdminEmployeesPage from "@/pages/AdminEmployeesPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
 import DeviceDetailPage from "@/pages/DeviceDetailPage";
 import DevicesPage from "@/pages/DevicesPage";
@@ -62,6 +64,30 @@ export default function App() {
         element={
           <ProtectedRoute requiredRole="ADMIN" redirectTo="/admin/login">
             <AdminDeviceFormPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/employees"
+        element={
+          <ProtectedRoute requiredRole="ADMIN" redirectTo="/admin/login">
+            <AdminEmployeesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/employees/new"
+        element={
+          <ProtectedRoute requiredRole="ADMIN" redirectTo="/admin/login">
+            <AdminEmployeeFormPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/employees/:id/edit"
+        element={
+          <ProtectedRoute requiredRole="ADMIN" redirectTo="/admin/login">
+            <AdminEmployeeFormPage />
           </ProtectedRoute>
         }
       />

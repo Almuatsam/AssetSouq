@@ -27,6 +27,9 @@ export default function AdminDashboardPage() {
           <Link to="/admin/devices" className="font-medium text-primary hover:underline">
             {t("adminDashboard.manageDevices")}
           </Link>
+          <Link to="/admin/employees" className="font-medium text-primary hover:underline">
+            {t("adminDashboard.manageEmployees")}
+          </Link>
         </Card>
 
         <p className="text-sm text-gray">{t("adminDashboard.comingSoon")}</p>

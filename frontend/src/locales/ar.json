@@ -64,7 +64,8 @@
   "adminDashboard": {
     "welcome": "مرحباً، {{username}}",
     "comingSoon": "بقية لوحة تحكم المسؤول قريباً.",
-    "manageDevices": "إدارة الأجهزة"
+    "manageDevices": "إدارة الأجهزة",
+    "manageEmployees": "إدارة الموظفين"
   },
   "deviceStatus": {
     "AVAILABLE": "متاح",
@@ -111,5 +112,52 @@
     "cancel": "إلغاء",
     "notFound": "الجهاز غير موجود.",
     "loadError": "تعذر تحميل بيانات الجهاز. حاول مرة أخرى."
+  },
+  "employeeStatus": {
+    "active": "نشط",
+    "inactive": "غير نشط",
+    "eligible": "مؤهل",
+    "ineligible": "غير مؤهل",
+    "laptopHolder": "حامل حاسوب محمول"
+  },
+  "adminEmployees": {
+    "title": "إدارة الموظفين",
+    "subtitle": "عرض وإضافة وتعديل الموظفين المؤهلين للسحب.",
+    "addEmployee": "إضافة موظف",
+    "activeFilterLabel": "الحالة",
+    "eligibleFilterLabel": "الأهلية",
+    "searchLabel": "بحث",
+    "searchPlaceholder": "الاسم أو الرقم الوظيفي أو البريد الإلكتروني",
+    "filterAll": "الكل",
+    "empty": "لا يوجد موظفون.",
+    "loadError": "تعذر تحميل الموظفين. حاول مرة أخرى.",
+    "staffNumber": "الرقم الوظيفي",
+    "name": "الاسم",
+    "department": "القسم",
+    "email": "البريد الإلكتروني",
+    "status": "الحالة",
+    "actions": "الإجراءات",
+    "edit": "تعديل",
+    "deactivate": "إلغاء التفعيل",
+    "activate": "تفعيل",
+    "confirmDeactivate": "إلغاء تفعيل هذا الموظف؟ لن يعد مؤهلاً للسحب.",
+    "confirmActivate": "إعادة تفعيل هذا الموظف؟",
+    "actionError": "تعذر إتمام هذا الإجراء. حاول مرة أخرى."
+  },
+  "adminEmployeeForm": {
+    "createTitle": "إضافة موظف",
+    "editTitle": "تعديل الموظف",
+    "staffNumber": "الرقم الوظيفي",
+    "name": "الاسم",
+    "department": "القسم",
+    "email": "البريد الإلكتروني",
+    "laptopHolder": "حامل حاسوب محمول",
+    "eligible": "مؤهل للسحب",
+    "active": "نشط",
+    "save": "حفظ",
+    "saving": "جارٍ الحفظ...",
+    "cancel": "إلغاء",
+    "notFound": "الموظف غير موجود.",
+    "loadError": "تعذر تحميل بيانات الموظف. حاول مرة أخرى."
   }
 }

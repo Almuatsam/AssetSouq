@@ -64,7 +64,8 @@
   "adminDashboard": {
     "welcome": "Welcome, {{username}}",
     "comingSoon": "More of the admin dashboard is coming soon.",
-    "manageDevices": "Manage Devices"
+    "manageDevices": "Manage Devices",
+    "manageEmployees": "Manage Employees"
   },
   "deviceStatus": {
     "AVAILABLE": "Available",
@@ -111,5 +112,52 @@
     "cancel": "Cancel",
     "notFound": "Device not found.",
     "loadError": "Couldn't load this device. Please try again."
+  },
+  "employeeStatus": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "eligible": "Eligible",
+    "ineligible": "Ineligible",
+    "laptopHolder": "Laptop Holder"
+  },
+  "adminEmployees": {
+    "title": "Manage Employees",
+    "subtitle": "View, add, and edit employees eligible for the raffle.",
+    "addEmployee": "Add Employee",
+    "activeFilterLabel": "Status",
+    "eligibleFilterLabel": "Eligibility",
+    "searchLabel": "Search",
+    "searchPlaceholder": "Name, staff number, or email",
+    "filterAll": "All",
+    "empty": "No employees found.",
+    "loadError": "Couldn't load employees. Please try again.",
+    "staffNumber": "Staff Number",
+    "name": "Name",
+    "department": "Department",
+    "email": "Email",
+    "status": "Status",
+    "actions": "Actions",
+    "edit": "Edit",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "confirmDeactivate": "Deactivate this employee? They will no longer be eligible for the raffle.",
+    "confirmActivate": "Reactivate this employee?",
+    "actionError": "Couldn't complete that action. Please try again."
+  },
+  "adminEmployeeForm": {
+    "createTitle": "Add Employee",
+    "editTitle": "Edit Employee",
+    "staffNumber": "Staff Number",
+    "name": "Name",
+    "department": "Department",
+    "email": "Email",
+    "laptopHolder": "Laptop Holder",
+    "eligible": "Eligible for the raffle",
+    "active": "Active",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "notFound": "Employee not found.",
+    "loadError": "Couldn't load this employee. Please try again."
   }
 }

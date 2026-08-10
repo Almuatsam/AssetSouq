@@ -55,4 +55,21 @@ describe("AdminDashboardPage", () => {
       "/admin/devices",
     );
   });
+
+  it("links to the employee management page", () => {
+    // Arrange
+    setStoredSession({
+      token: "tok",
+      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null } },
+    });
+
+    // Act
+    renderWithProviders(<AdminDashboardPage />);
+
+    // Assert
+    expect(screen.getByRole("link", { name: /manage employees/i })).toHaveAttribute(
+      "href",
+      "/admin/employees",
+    );
+  });
 });
