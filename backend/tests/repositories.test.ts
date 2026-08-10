@@ -14,7 +14,7 @@ jest.mock("../src/config/prisma", () => ({
   prisma: {
     admin: { findUnique: jest.fn(), update: jest.fn() },
     employee: { findUnique: jest.fn() },
-    device: { findMany: jest.fn(), findUnique: jest.fn() },
+    device: { findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
     registration: { findFirst: jest.fn(), create: jest.fn() },
   },
 }));
@@ -22,7 +22,7 @@ jest.mock("../src/config/prisma", () => ({
 const mockedPrisma = prisma as unknown as {
   admin: { findUnique: jest.Mock; update: jest.Mock };
   employee: { findUnique: jest.Mock };
-  device: { findMany: jest.Mock; findUnique: jest.Mock };
+  device: { findMany: jest.Mock; findUnique: jest.Mock; create: jest.Mock; update: jest.Mock };
   registration: { findFirst: jest.Mock; create: jest.Mock };
 };
 
@@ -85,6 +85,58 @@ describe("deviceRepository", () => {
 
     // Assert
     expect(mockedPrisma.device.findUnique).toHaveBeenCalledWith({ where: { id: 5 } });
+  });
+
+  it("findByAssetTag() queries by assetTag", async () => {
+    // Act
+    await deviceRepository.findByAssetTag("AST-001");
+
+    // Assert
+    expect(mockedPrisma.device.findUnique).toHaveBeenCalledWith({ where: { assetTag: "AST-001" } });
+  });
+
+  it("findAll() queries every device, newest first, with no status filter by default", async () => {
+    // Act
+    await deviceRepository.findAll();
+
+    // Assert
+    expect(mockedPrisma.device.findMany).toHaveBeenCalledWith({
+      where: undefined,
+      orderBy: { createdAt: "desc" },
+    });
+  });
+
+  it("findAll() filters by status when given one", async () => {
+    // Act
+    await deviceRepository.findAll("REMOVED");
+
+    // Assert
+    expect(mockedPrisma.device.findMany).toHaveBeenCalledWith({
+      where: { status: "REMOVED" },
+      orderBy: { createdAt: "desc" },
+    });
+  });
+
+  it("create() persists a new device", async () => {
+    // Arrange
+    const data = { assetTag: "AST-002", deviceType: "Laptop", brand: "HP", model: "840", price: 200 };
+
+    // Act
+    await deviceRepository.create(data as never);
+
+    // Assert
+    expect(mockedPrisma.device.create).toHaveBeenCalledWith({ data });
+  });
+
+  it("update() updates the given device by id", async () => {
+    // Act
+    await deviceRepository.update(1, { status: "REMOVED" });
+
+    // Assert
+    expect(mockedPrisma.device.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { status: "REMOVED" },
+    });
   });
 });
 

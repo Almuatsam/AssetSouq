@@ -27,14 +27,30 @@ export const adminLoginRateLimiter = createLoginRateLimiter();
 // login limiters' trust-proxy config). Falls back to IP only in the
 // (practically unreachable, since these routes require authenticate()
 // first) case req.user is somehow missing.
-export const registrationRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req: Request) => (req.user ? `user:${req.user.id}` : `ip:${req.ip ?? "unknown"}`),
-  message: { success: false, error: "Too many requests. Please try again later." },
-});
+function createUserKeyedRateLimiter(limit: number) {
+  return rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit,
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req: Request) => (req.user ? `user:${req.user.id}` : `ip:${req.ip ?? "unknown"}`),
+    message: { success: false, error: "Too many requests. Please try again later." },
+  });
+}
+
+export const registrationRateLimiter = createUserKeyedRateLimiter(20);
+
+// Admin device writes (create/update) — generous enough for legitimate
+// bulk operations (e.g. entering a batch of newly retired devices) but
+// still bounded, since these are unprotected by anything else.
+export const adminDeviceWriteRateLimiter = createUserKeyedRateLimiter(60);
+
+// Deliberately a separate instance from deviceRateLimiter below, even
+// though the limits happen to match today — an admin browsing
+// /admin/devices must not be able to get rate-limited out by heavy
+// employee traffic on /devices sharing the same IP (the same class of
+// issue the login limiters' own comment above already calls out).
+export const adminDeviceReadRateLimiter = createUserKeyedRateLimiter(120);
 
 // Read-only, no side effects — a generous ceiling just to stop naive
 // scripted abuse, not to bound legitimate browsing.

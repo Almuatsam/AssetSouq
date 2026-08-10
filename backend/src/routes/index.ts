@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { adminDeviceRouter } from "./adminDeviceRoutes";
 import { authRouter } from "./authRoutes";
 import { deviceRouter } from "./deviceRoutes";
 import { registrationRouter } from "./registrationRoutes";
@@ -13,9 +14,11 @@ router.get("/health", (_req, res) => {
 router.use("/auth", authRouter);
 router.use("/devices", deviceRouter);
 router.use("/registrations", registrationRouter);
+router.use("/admin/devices", adminDeviceRouter);
 
 // Remaining feature routers are mounted here as they're implemented, e.g.:
-// router.use("/employees", employeeRouter);
+// router.use("/admin/employees", adminEmployeeRouter);
+// router.use("/admin/registrations", adminRegistrationRouter);
 // router.use("/draws", drawRouter);
 // router.use("/winners", winnerRouter);
 // router.use("/reports", reportRouter);

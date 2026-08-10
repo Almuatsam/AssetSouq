@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import type { NextFunction, Request, Response } from "express";
 import { ZodError } from "zod";
 
@@ -30,6 +31,18 @@ export function errorHandler(
       error: "Validation failed",
       details: err.issues.map((issue) => ({ path: issue.path.join("."), message: issue.message })),
     });
+    return;
+  }
+
+  // Project-wide backstop for unique-constraint violations (P2002), e.g.
+  // a race between a service's own pre-check (findByAssetTag, etc.) and
+  // the actual create() landing — without this, that race surfaces as an
+  // opaque 500 instead of the accurate, already-expected 409. The field
+  // name(s) in `meta.target` are just schema column names, not internal
+  // detail, so it's safe to include in the message.
+  if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+    const target = Array.isArray(err.meta?.target) ? err.meta.target.join(", ") : "field";
+    res.status(409).json({ success: false, error: `A record with this ${target} already exists` });
     return;
   }
 
