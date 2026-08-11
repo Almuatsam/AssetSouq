@@ -84,6 +84,14 @@ describe("AdminDashboardPage", () => {
     );
   });
 
+  it("links to the winners page", () => {
+    // Act
+    renderWithProviders(<AdminDashboardPage />);
+
+    // Assert
+    expect(screen.getByRole("link", { name: /view winners/i })).toHaveAttribute("href", "/admin/winners");
+  });
+
   it("shows the total counts once stats load", async () => {
     // Act
     renderWithProviders(<AdminDashboardPage />);

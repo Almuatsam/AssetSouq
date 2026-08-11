@@ -66,6 +66,7 @@
     "manageDevices": "Manage Devices",
     "manageEmployees": "Manage Employees",
     "manageRegistrations": "Manage Registrations",
+    "viewWinners": "View Winners",
     "statsLoadError": "Couldn't load dashboard stats. Please try again.",
     "totalDevices": "Total Devices",
     "totalEmployees": "Total Employees",
@@ -96,8 +97,12 @@
     "edit": "Edit",
     "remove": "Remove",
     "restore": "Restore",
+    "runDraw": "Run Draw",
     "confirmRemove": "Remove this device? Employees will no longer be able to register interest in it.",
     "confirmRestore": "Restore this device to Available?",
+    "confirmRunDraw": "Run the draw for this device now? This selects the winner(s) and cannot be undone.",
+    "drawComplete": "Draw complete. Winner(s): {{names}}.",
+    "viewWinners": "View Winners",
     "actionError": "Couldn't complete that action. Please try again."
   },
   "adminDeviceForm": {
@@ -195,6 +200,24 @@
       "ELIGIBLE": "Eligible",
       "INELIGIBLE": "Ineligible",
       "WITHDRAWN": "Withdrawn"
+    }
+  },
+  "adminWinners": {
+    "title": "Winners",
+    "subtitle": "View draw results and payment status.",
+    "filterLabel": "Payment Status",
+    "filterAll": "All",
+    "empty": "No winners yet.",
+    "loadError": "Couldn't load winners. Please try again.",
+    "employee": "Employee",
+    "device": "Device",
+    "priceDue": "Price Due",
+    "drawDate": "Draw Date",
+    "paymentStatus": "Payment Status",
+    "paymentStatusValues": {
+      "PENDING": "Pending",
+      "PAID": "Paid",
+      "NON_PAYMENT": "Non-Payment"
     }
   }
 }

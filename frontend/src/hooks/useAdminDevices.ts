@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { DASHBOARD_STATS_QUERY_KEY } from "@/hooks/useDashboardStats";
 import { adminDeviceService } from "@/services/adminDeviceService";
 import type { CreateDeviceInput, DeviceStatus, UpdateDeviceInput } from "@/types/device";
 
@@ -12,13 +13,20 @@ export function useAdminDevices(status?: DeviceStatus) {
   });
 }
 
-// Admin writes (create/update) change the same device rows the employee-facing
-// useDevices()/useDevice() hooks cache under ["devices"]/["devices", id] — see
-// hooks/useDevices.ts. Invalidating both prefixes keeps the employee device
-// list/detail views from serving stale price/status data after an admin edit.
-function invalidateDeviceCaches(queryClient: ReturnType<typeof useQueryClient>) {
+// Admin writes (create/update/draw) change the same device rows the
+// employee-facing useDevices()/useDevice() hooks cache under
+// ["devices"]/["devices", id] — see hooks/useDevices.ts — and can shift the
+// admin dashboard's devicesByStatus breakdown, cached under
+// DASHBOARD_STATS_QUERY_KEY — see hooks/useDashboardStats.ts. Invalidating
+// all three here, once, keeps every device-derived cache in sync after any
+// admin device write rather than each mutation hook keeping its own
+// (driftable) copy of "which caches represent devices". Exported so
+// useAdminDraws.ts's useRunDraw() — which also flips a device's status —
+// reuses this instead of duplicating it.
+export function invalidateDeviceCaches(queryClient: ReturnType<typeof useQueryClient>) {
   queryClient.invalidateQueries({ queryKey: ADMIN_DEVICES_QUERY_KEY });
   queryClient.invalidateQueries({ queryKey: ["devices"] });
+  queryClient.invalidateQueries({ queryKey: DASHBOARD_STATS_QUERY_KEY });
 }
 
 export function useCreateDevice() {

@@ -66,6 +66,7 @@
     "manageDevices": "إدارة الأجهزة",
     "manageEmployees": "إدارة الموظفين",
     "manageRegistrations": "إدارة التسجيلات",
+    "viewWinners": "عرض الفائزين",
     "statsLoadError": "تعذر تحميل إحصائيات لوحة التحكم. حاول مرة أخرى.",
     "totalDevices": "إجمالي الأجهزة",
     "totalEmployees": "إجمالي الموظفين",
@@ -96,8 +97,12 @@
     "edit": "تعديل",
     "remove": "إزالة",
     "restore": "استعادة",
+    "runDraw": "إجراء السحب",
     "confirmRemove": "إزالة هذا الجهاز؟ لن يتمكن الموظفون بعد الآن من تسجيل اهتمامهم به.",
     "confirmRestore": "استعادة هذا الجهاز ليصبح متاحاً؟",
+    "confirmRunDraw": "إجراء السحب لهذا الجهاز الآن؟ سيتم اختيار الفائز (الفائزين) ولا يمكن التراجع عن هذا الإجراء.",
+    "drawComplete": "اكتمل السحب. الفائز (الفائزون): {{names}}.",
+    "viewWinners": "عرض الفائزين",
     "actionError": "تعذر إتمام هذا الإجراء. حاول مرة أخرى."
   },
   "adminDeviceForm": {
@@ -195,6 +200,24 @@
       "ELIGIBLE": "مؤهل",
       "INELIGIBLE": "غير مؤهل",
       "WITHDRAWN": "مسحوب"
+    }
+  },
+  "adminWinners": {
+    "title": "الفائزون",
+    "subtitle": "عرض نتائج السحب وحالة الدفع.",
+    "filterLabel": "حالة الدفع",
+    "filterAll": "الكل",
+    "empty": "لا يوجد فائزون بعد.",
+    "loadError": "تعذر تحميل الفائزين. حاول مرة أخرى.",
+    "employee": "الموظف",
+    "device": "الجهاز",
+    "priceDue": "المبلغ المستحق",
+    "drawDate": "تاريخ السحب",
+    "paymentStatus": "حالة الدفع",
+    "paymentStatusValues": {
+      "PENDING": "قيد الانتظار",
+      "PAID": "مدفوع",
+      "NON_PAYMENT": "غير مدفوع"
     }
   }
 }

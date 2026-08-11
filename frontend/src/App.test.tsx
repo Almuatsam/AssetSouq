@@ -100,4 +100,12 @@ describe("App routing", () => {
     // Assert
     expect(screen.getByRole("heading", { name: /admin login/i })).toBeInTheDocument();
   });
+
+  it("redirects an unauthenticated visitor away from /admin/winners to /admin/login", () => {
+    // Act
+    renderWithProviders(<App />, { route: "/admin/winners" });
+
+    // Assert
+    expect(screen.getByRole("heading", { name: /admin login/i })).toBeInTheDocument();
+  });
 });

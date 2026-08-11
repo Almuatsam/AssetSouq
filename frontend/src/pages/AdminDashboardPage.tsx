@@ -57,6 +57,9 @@ export default function AdminDashboardPage() {
           <Link to="/admin/registrations" className="font-medium text-primary hover:underline">
             {t("adminDashboard.manageRegistrations")}
           </Link>
+          <Link to="/admin/winners" className="font-medium text-primary hover:underline">
+            {t("adminDashboard.viewWinners")}
+          </Link>
         </Card>
 
         {stats ? (

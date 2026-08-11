@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { useAdminDevices, useUpdateDevice } from "@/hooks/useAdminDevices";
+import { useRunDraw } from "@/hooks/useAdminDraws";
 import { useAuth } from "@/store/AuthContext";
 import type { DeviceStatus } from "@/types/device";
 
@@ -17,19 +18,35 @@ export default function AdminDevicesPage() {
   const { logout } = useAuth();
   const [statusFilter, setStatusFilter] = useState<DeviceStatus | "">("");
   const [actionError, setActionError] = useState<string | null>(null);
+  const [drawWinnerNames, setDrawWinnerNames] = useState<string[] | null>(null);
 
   const { data: devices, isLoading, isError } = useAdminDevices(statusFilter || undefined);
   const updateDevice = useUpdateDevice();
+  const runDraw = useRunDraw();
+  const isActionPending = updateDevice.isPending || runDraw.isPending;
 
   // Only AVAILABLE <-> REMOVED is ever offered here — the backend's state
   // machine (deviceService.updateDevice) reserves DRAWN/SOLD exclusively
-  // for the future draw/payment workflow, so there's nothing for this
-  // page to expose for those statuses beyond viewing them.
+  // for the draw/payment workflow, so there's nothing for this page to
+  // expose for those statuses beyond viewing them.
   const handleToggleStatus = async (id: number, nextStatus: DeviceStatus, confirmMessage: string) => {
     if (!window.confirm(confirmMessage)) return;
     setActionError(null);
+    setDrawWinnerNames(null);
     try {
       await updateDevice.mutateAsync({ id, data: { status: nextStatus } });
+    } catch (err) {
+      setActionError(err instanceof Error ? err.message : t("adminDevices.actionError"));
+    }
+  };
+
+  const handleRunDraw = async (id: number) => {
+    if (!window.confirm(t("adminDevices.confirmRunDraw"))) return;
+    setActionError(null);
+    setDrawWinnerNames(null);
+    try {
+      const draw = await runDraw.mutateAsync(id);
+      setDrawWinnerNames(draw.winners.map((winner) => winner.employee.name));
     } catch (err) {
       setActionError(err instanceof Error ? err.message : t("adminDevices.actionError"));
     }
@@ -76,6 +93,15 @@ export default function AdminDevicesPage() {
         {actionError && (
           <p role="alert" className="text-sm text-danger">
             {actionError}
+          </p>
+        )}
+
+        {drawWinnerNames && (
+          <p role="status" className="text-sm text-success">
+            {t("adminDevices.drawComplete", { names: drawWinnerNames.join(", ") })}{" "}
+            <Link to="/admin/winners" className="underline">
+              {t("adminDevices.viewWinners")}
+            </Link>
           </p>
         )}
 
@@ -126,8 +152,18 @@ export default function AdminDevicesPage() {
                         {device.status === "AVAILABLE" && (
                           <button
                             type="button"
+                            className="text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                            disabled={isActionPending}
+                            onClick={() => handleRunDraw(device.id)}
+                          >
+                            {t("adminDevices.runDraw")}
+                          </button>
+                        )}
+                        {device.status === "AVAILABLE" && (
+                          <button
+                            type="button"
                             className="text-danger hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-                            disabled={updateDevice.isPending}
+                            disabled={isActionPending}
                             onClick={() =>
                               handleToggleStatus(device.id, "REMOVED", t("adminDevices.confirmRemove"))
                             }
@@ -139,7 +175,7 @@ export default function AdminDevicesPage() {
                           <button
                             type="button"
                             className="text-success hover:underline disabled:cursor-not-allowed disabled:opacity-50"
-                            disabled={updateDevice.isPending}
+                            disabled={isActionPending}
                             onClick={() =>
                               handleToggleStatus(device.id, "AVAILABLE", t("adminDevices.confirmRestore"))
                             }
