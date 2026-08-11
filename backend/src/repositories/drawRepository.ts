@@ -1,4 +1,4 @@
-import type { Draw, Prisma } from "@prisma/client";
+import type { Draw, Prisma, RedrawReason, Winner } from "@prisma/client";
 
 import { prisma } from "../config/prisma";
 
@@ -21,6 +21,10 @@ export interface CreateWinnerData {
   deviceId: number;
   drawId: number;
   priceDue: Prisma.Decimal;
+  // Only set when this winner row is a redraw replacement (see
+  // drawService.redrawWinner()) — omitted for an original draw's winners.
+  redrawOf?: number;
+  redrawReason?: RedrawReason;
 }
 
 export interface DrawWithWinners extends Draw {
@@ -40,7 +44,7 @@ export const drawRepository = {
     return db.draw.create({ data });
   },
 
-  createWinner(data: CreateWinnerData, db: Db = prisma) {
+  createWinner(data: CreateWinnerData, db: Db = prisma): Promise<Winner> {
     return db.winner.create({ data });
   },
 
@@ -69,5 +73,20 @@ export const drawRepository = {
         },
       },
     });
+  },
+
+  // Locks the draw row for the rest of the transaction. Used by
+  // redrawWinner() — not winnerRepository.lockForUpdate() on the specific
+  // winner being redrawn, because the resource actually contested by two
+  // *different* redraws on the *same* draw is "who's the next eligible
+  // waiting-list candidate", which is scoped to the draw, not to either
+  // individual winner slot. Locking only the winner row left that shared
+  // resource unprotected: two concurrent redraws of two different winner
+  // slots on one draw could both compute the same next-in-line candidate
+  // before either committed. Locking the draw serializes every redraw
+  // against it, closing that gap the same way deviceRepository's device
+  // lock closes runDraw()'s device-level race.
+  async lockForUpdate(id: number, tx: Prisma.TransactionClient): Promise<void> {
+    await tx.$queryRaw`SELECT id FROM Draw WHERE id = ${id} FOR UPDATE`;
   },
 };

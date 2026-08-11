@@ -1,4 +1,4 @@
-import { runDrawSchema } from "../src/validators/adminDrawValidators";
+import { redrawWinnerSchema, runDrawSchema } from "../src/validators/adminDrawValidators";
 
 describe("runDrawSchema", () => {
   it("accepts a valid deviceId", () => {
@@ -20,5 +20,22 @@ describe("runDrawSchema", () => {
     // Act / Assert
     expect(() => runDrawSchema.parse({ deviceId: 0 })).toThrow();
     expect(() => runDrawSchema.parse({ deviceId: -1 })).toThrow();
+  });
+});
+
+describe("redrawWinnerSchema", () => {
+  it.each(["DECLINED", "NON_PAYMENT", "NO_SHOW", "ADMIN_OVERRIDE"])("accepts reason %s", (reason) => {
+    // Act / Assert
+    expect(() => redrawWinnerSchema.parse({ reason })).not.toThrow();
+  });
+
+  it("rejects a missing reason", () => {
+    // Act / Assert
+    expect(() => redrawWinnerSchema.parse({})).toThrow();
+  });
+
+  it("rejects an invalid reason", () => {
+    // Act / Assert
+    expect(() => redrawWinnerSchema.parse({ reason: "BOGUS" })).toThrow();
   });
 });

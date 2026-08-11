@@ -6,6 +6,7 @@
 // still never touching a database.
 import { prisma } from "../src/config/prisma";
 import { adminRepository } from "../src/repositories/adminRepository";
+import { auditLogRepository } from "../src/repositories/auditLogRepository";
 import { deviceRepository } from "../src/repositories/deviceRepository";
 import { drawRepository } from "../src/repositories/drawRepository";
 import { employeeRepository } from "../src/repositories/employeeRepository";
@@ -38,7 +39,8 @@ jest.mock("../src/config/prisma", () => ({
       groupBy: jest.fn(),
     },
     draw: { create: jest.fn(), findUnique: jest.fn() },
-    winner: { create: jest.fn(), findMany: jest.fn() },
+    winner: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), findFirst: jest.fn(), update: jest.fn() },
+    auditLog: { create: jest.fn() },
   },
 }));
 
@@ -67,7 +69,14 @@ const mockedPrisma = prisma as unknown as {
     update: jest.Mock;
   };
   draw: { create: jest.Mock; findUnique: jest.Mock };
-  winner: { create: jest.Mock; findMany: jest.Mock };
+  winner: {
+    create: jest.Mock;
+    findMany: jest.Mock;
+    findUnique: jest.Mock;
+    findFirst: jest.Mock;
+    update: jest.Mock;
+  };
+  auditLog: { create: jest.Mock };
 };
 
 beforeEach(() => jest.clearAllMocks());
@@ -580,6 +589,24 @@ describe("drawRepository", () => {
     expect(mockedPrisma.winner.create).toHaveBeenCalledWith({ data });
   });
 
+  it("createWinner() passes redrawOf/redrawReason through when given (a redraw replacement)", async () => {
+    // Arrange
+    const data = {
+      employeeId: 11,
+      deviceId: 1,
+      drawId: 100,
+      priceDue: "150.00",
+      redrawOf: 1,
+      redrawReason: "NON_PAYMENT",
+    };
+
+    // Act
+    await drawRepository.createWinner(data as never);
+
+    // Assert
+    expect(mockedPrisma.winner.create).toHaveBeenCalledWith({ data });
+  });
+
   it("createWinner() accepts an explicit transaction client in place of the default shared one", async () => {
     // Arrange
     const tx = { winner: { create: jest.fn() } } as never;
@@ -614,6 +641,17 @@ describe("drawRepository", () => {
         },
       },
     });
+  });
+
+  it("lockForUpdate() issues a locking read against the draw row", async () => {
+    // Arrange
+    const tx = { $queryRaw: jest.fn().mockResolvedValue([]) } as never;
+
+    // Act
+    await drawRepository.lockForUpdate(100, tx);
+
+    // Assert
+    expect((tx as { $queryRaw: jest.Mock }).$queryRaw).toHaveBeenCalled();
   });
 });
 
@@ -653,5 +691,80 @@ describe("winnerRepository", () => {
         where: { deviceId: 1, employeeId: 10, paymentStatus: "PAID" },
       }),
     );
+  });
+
+  it("findById() queries by id", async () => {
+    // Act
+    await winnerRepository.findById(1);
+
+    // Assert
+    expect(mockedPrisma.winner.findUnique).toHaveBeenCalledWith({ where: { id: 1 } });
+  });
+
+  it("findByRedrawOf() queries for a winner whose redrawOf points at the given id", async () => {
+    // Act
+    await winnerRepository.findByRedrawOf(5);
+
+    // Assert
+    expect(mockedPrisma.winner.findFirst).toHaveBeenCalledWith({ where: { redrawOf: 5 } });
+  });
+
+  it("updatePayment() updates the given winner's payment fields", async () => {
+    // Arrange
+    const paymentDate = new Date("2026-01-01T00:00:00.000Z");
+
+    // Act
+    await winnerRepository.updatePayment(1, {
+      paymentStatus: "PAID",
+      paymentMethod: "Payroll deduction",
+      paymentDate,
+    });
+
+    // Assert
+    expect(mockedPrisma.winner.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { paymentStatus: "PAID", paymentMethod: "Payroll deduction", paymentDate },
+    });
+  });
+
+  it("updateHandover() sets the given winner's handoverDate", async () => {
+    // Arrange
+    const handoverDate = new Date("2026-01-01T00:00:00.000Z");
+
+    // Act
+    await winnerRepository.updateHandover(1, handoverDate);
+
+    // Assert
+    expect(mockedPrisma.winner.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { handoverDate },
+    });
+  });
+
+});
+
+describe("auditLogRepository", () => {
+  it("create() persists a new audit log entry", async () => {
+    // Arrange
+    const data = { adminId: 1, action: "REDRAW_WINNER", entity: "Winner", entityId: 5 };
+
+    // Act
+    await auditLogRepository.create(data);
+
+    // Assert
+    expect(mockedPrisma.auditLog.create).toHaveBeenCalledWith({ data });
+  });
+
+  it("accepts an explicit transaction client in place of the default shared one", async () => {
+    // Arrange
+    const tx = { auditLog: { create: jest.fn() } } as never;
+    const data = { adminId: 1, action: "REDRAW_WINNER", entity: "Winner", entityId: 5 };
+
+    // Act
+    await auditLogRepository.create(data, tx);
+
+    // Assert
+    expect((tx as { auditLog: { create: jest.Mock } }).auditLog.create).toHaveBeenCalledWith({ data });
+    expect(mockedPrisma.auditLog.create).not.toHaveBeenCalled();
   });
 });

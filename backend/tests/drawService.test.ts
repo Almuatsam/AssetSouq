@@ -1,31 +1,38 @@
 import { prisma } from "../src/config/prisma";
+import { auditLogRepository } from "../src/repositories/auditLogRepository";
 import { deviceRepository } from "../src/repositories/deviceRepository";
 import { drawRepository } from "../src/repositories/drawRepository";
 import { employeeRepository } from "../src/repositories/employeeRepository";
 import { registrationRepository } from "../src/repositories/registrationRepository";
+import { winnerRepository } from "../src/repositories/winnerRepository";
 import { drawService } from "../src/services/drawService";
 import { eligibilityService } from "../src/services/eligibilityService";
 import * as rng from "../src/utils/rng";
 
 jest.mock("../src/config/prisma", () => ({
-  // runDraw()'s writes happen inside prisma.$transaction — just invoke the
-  // callback with a placeholder tx object; every repository call inside
-  // it is separately mocked below, so what "tx" actually is doesn't
-  // matter for these tests, only that the callback runs.
+  // runDraw()'s/redrawWinner()'s writes happen inside prisma.$transaction —
+  // just invoke the callback with a placeholder tx object; every
+  // repository call inside it is separately mocked below, so what "tx"
+  // actually is doesn't matter for these tests, only that the callback
+  // runs.
   prisma: { $transaction: jest.fn((callback: (tx: unknown) => unknown) => callback({})) },
 }));
+jest.mock("../src/repositories/auditLogRepository");
 jest.mock("../src/repositories/deviceRepository");
 jest.mock("../src/repositories/drawRepository");
 jest.mock("../src/repositories/employeeRepository");
 jest.mock("../src/repositories/registrationRepository");
+jest.mock("../src/repositories/winnerRepository");
 jest.mock("../src/services/eligibilityService");
 jest.mock("../src/utils/rng");
 
 const mockedPrisma = prisma as unknown as { $transaction: jest.Mock };
+const mockedAuditLogRepo = auditLogRepository as jest.Mocked<typeof auditLogRepository>;
 const mockedDeviceRepo = deviceRepository as jest.Mocked<typeof deviceRepository>;
 const mockedDrawRepo = drawRepository as jest.Mocked<typeof drawRepository>;
 const mockedEmployeeRepo = employeeRepository as jest.Mocked<typeof employeeRepository>;
 const mockedRegistrationRepo = registrationRepository as jest.Mocked<typeof registrationRepository>;
+const mockedWinnerRepo = winnerRepository as jest.Mocked<typeof winnerRepository>;
 const mockedEligibility = eligibilityService as jest.Mocked<typeof eligibilityService>;
 const mockedRng = rng as jest.Mocked<typeof rng>;
 
@@ -326,5 +333,259 @@ describe("drawService.runDraw", () => {
 
     // Act / Assert
     await expect(drawService.runDraw(1, 1)).rejects.toMatchObject({ statusCode: 500 });
+  });
+});
+
+describe("drawService.redrawWinner", () => {
+  const baseWinner = {
+    id: 1,
+    employeeId: 10,
+    deviceId: 1,
+    drawId: 100,
+    drawDate: new Date(),
+    accepted: false,
+    priceDue: "150.00",
+    paymentStatus: "PENDING" as const,
+    paymentDate: null,
+    paymentMethod: null,
+    handoverDate: null,
+    redrawOf: null,
+    redrawReason: null,
+  };
+
+  const drawWithWaitingList = {
+    id: 100,
+    deviceId: 1,
+    rngSeed: "seed",
+    candidatePoolSnapshot: [10, 11, 12],
+    drawnAt: new Date(),
+    drawnByAdminId: 1,
+    winners: [{ id: 1, employeeId: 10, deviceId: 1, drawId: 100, priceDue: "150.00", paymentStatus: "PENDING" }],
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedPrisma.$transaction.mockImplementation((callback: (tx: unknown) => unknown) => callback({}));
+    mockedWinnerRepo.findById.mockResolvedValue(baseWinner as never);
+    mockedWinnerRepo.findByRedrawOf.mockResolvedValue(null);
+    mockedDrawRepo.findByIdWithWinners.mockResolvedValue(drawWithWaitingList as never);
+    mockedDeviceRepo.findById.mockResolvedValue(baseDevice as never);
+    mockedEmployeeRepo.findById.mockImplementation((id: number) =>
+      Promise.resolve({ ...baseEmployee, id } as never),
+    );
+    mockedEligibility.checkEmployeeAttributes.mockReturnValue({ eligible: true, reasons: [] });
+    mockedDrawRepo.createWinner.mockResolvedValue({ id: 2, employeeId: 11 } as never);
+    mockedEmployeeRepo.markAsWinner.mockResolvedValue(baseEmployee as never);
+    mockedAuditLogRepo.create.mockResolvedValue({} as never);
+  });
+
+  it("rejects with a 404 when the winner doesn't exist", async () => {
+    // Arrange
+    mockedWinnerRepo.findById.mockResolvedValue(null);
+
+    // Act / Assert
+    await expect(drawService.redrawWinner(999, "NON_PAYMENT", 1)).rejects.toMatchObject({
+      statusCode: 404,
+    });
+  });
+
+  it("rejects with a 409 when the winner has already paid", async () => {
+    // Arrange
+    mockedWinnerRepo.findById.mockResolvedValue({ ...baseWinner, paymentStatus: "PAID" } as never);
+
+    // Act / Assert
+    await expect(drawService.redrawWinner(1, "NON_PAYMENT", 1)).rejects.toMatchObject({ statusCode: 409 });
+    expect(mockedDrawRepo.createWinner).not.toHaveBeenCalled();
+  });
+
+  it("rejects with a 409 when the winner has already been redrawn", async () => {
+    // Arrange
+    mockedWinnerRepo.findByRedrawOf.mockResolvedValue({ ...baseWinner, id: 2, redrawOf: 1 } as never);
+
+    // Act / Assert
+    await expect(drawService.redrawWinner(1, "NON_PAYMENT", 1)).rejects.toMatchObject({ statusCode: 409 });
+    expect(mockedDrawRepo.createWinner).not.toHaveBeenCalled();
+  });
+
+  it("rejects with a 409 when there's no one left in the waiting list", async () => {
+    // Arrange — every remaining candidate fails eligibility.
+    mockedEligibility.checkEmployeeAttributes.mockReturnValue({
+      eligible: false,
+      reasons: ["Laptop holders cannot participate"],
+    });
+
+    // Act / Assert
+    await expect(drawService.redrawWinner(1, "NON_PAYMENT", 1)).rejects.toMatchObject({ statusCode: 409 });
+    expect(mockedDrawRepo.createWinner).not.toHaveBeenCalled();
+  });
+
+  it("picks the first still-eligible candidate from the waiting list, skipping current winners", async () => {
+    // Act
+    await drawService.redrawWinner(1, "NON_PAYMENT", 1);
+
+    // Assert — employeeId 10 is skipped (already a winner for this draw),
+    // so employeeId 11 (next in candidatePoolSnapshot) is selected.
+    expect(mockedDrawRepo.createWinner).toHaveBeenCalledWith(
+      expect.objectContaining({
+        employeeId: 11,
+        deviceId: 1,
+        drawId: 100,
+        priceDue: baseDevice.price,
+        redrawOf: 1,
+        redrawReason: "NON_PAYMENT",
+      }),
+      expect.anything(),
+    );
+  });
+
+  it("skips a waiting-list candidate who fails re-validation and picks the next one", async () => {
+    // Arrange
+    mockedEligibility.checkEmployeeAttributes.mockImplementation((employee) =>
+      employee.id === 11
+        ? { eligible: false, reasons: ["Laptop holders cannot participate"] }
+        : { eligible: true, reasons: [] },
+    );
+
+    // Act
+    await drawService.redrawWinner(1, "NON_PAYMENT", 1);
+
+    // Assert
+    expect(mockedDrawRepo.createWinner).toHaveBeenCalledWith(
+      expect.objectContaining({ employeeId: 12 }),
+      expect.anything(),
+    );
+  });
+
+  it("sets the new winner's lastWinnerDate", async () => {
+    // Act
+    await drawService.redrawWinner(1, "NON_PAYMENT", 1);
+
+    // Assert
+    expect(mockedEmployeeRepo.markAsWinner).toHaveBeenCalledWith(11, expect.anything());
+  });
+
+  it("writes an audit log entry for the redraw", async () => {
+    // Act
+    await drawService.redrawWinner(1, "DECLINED", 7);
+
+    // Assert
+    expect(mockedAuditLogRepo.create).toHaveBeenCalledWith(
+      expect.objectContaining({ adminId: 7, action: "REDRAW_WINNER", entity: "Winner" }),
+      expect.anything(),
+    );
+  });
+
+  // The draw (not the specific winner row) is what's locked — see the
+  // comment on drawRepository.lockForUpdate() for why: the contested
+  // resource across concurrent redraws on one draw is "who's next in the
+  // waiting list", which is shared by every winner slot on that draw.
+  it("locks the draw before re-selecting and creating the replacement", async () => {
+    // Act
+    await drawService.redrawWinner(1, "NON_PAYMENT", 1);
+
+    // Assert
+    expect(mockedDrawRepo.lockForUpdate).toHaveBeenCalledWith(100, expect.anything());
+  });
+
+  // Regression: closes the TOCTOU race where two concurrent redrawWinner()
+  // calls for the same winner could both pass the pre-check before either
+  // commits. The locked re-check inside the transaction must catch a
+  // winner that's been redrawn by the time this call gets to write.
+  it("re-verifies under a lock inside the transaction, rejecting a race where the winner was already redrawn", async () => {
+    // Arrange — simulates a concurrent redraw landing between this call's
+    // pre-check and the point where its own transaction acquires the lock.
+    mockedWinnerRepo.findByRedrawOf
+      .mockResolvedValueOnce(null) // pre-check, outside the transaction
+      .mockResolvedValueOnce({ id: 2, redrawOf: 1 } as never); // re-check, inside it
+
+    // Act / Assert
+    await expect(drawService.redrawWinner(1, "NON_PAYMENT", 1)).rejects.toMatchObject({ statusCode: 409 });
+    expect(mockedDrawRepo.createWinner).not.toHaveBeenCalled();
+  });
+
+  // Regression: the "not already paid" pre-check ran before the
+  // transaction, with a non-trivial amount of async work (loading the
+  // draw/device, then the waiting-list eligibility loop) in between — a
+  // concurrent recordPayment() landing in that window must still be
+  // caught by re-reading the locked winner row, not just trusting the
+  // pre-transaction read.
+  it("re-verifies payment status under the lock inside the transaction, rejecting a race where a payment was recorded concurrently", async () => {
+    // Arrange
+    mockedWinnerRepo.findById
+      .mockResolvedValueOnce(baseWinner as never) // pre-check, outside the transaction
+      .mockResolvedValueOnce({ ...baseWinner, paymentStatus: "PAID" } as never); // re-check, inside it
+
+    // Act / Assert
+    await expect(drawService.redrawWinner(1, "NON_PAYMENT", 1)).rejects.toMatchObject({ statusCode: 409 });
+    expect(mockedDrawRepo.createWinner).not.toHaveBeenCalled();
+  });
+
+  // Regression: this is the cross-slot race the draw-level lock exists to
+  // close. Two concurrent redraws of two *different* winner slots on the
+  // same draw could otherwise both compute the same next-in-line
+  // candidate (from a stale pre-lock read of "current winners") before
+  // either commits. The authoritative re-selection — re-fetching the
+  // draw's winners *after* acquiring the lock — must see any winner a
+  // concurrent redraw already committed and pick someone else instead.
+  it("re-selects a fresh candidate under the lock if the pre-check's pick was already claimed by a concurrent redraw", async () => {
+    // Arrange
+    mockedDrawRepo.findByIdWithWinners
+      .mockResolvedValueOnce(drawWithWaitingList as never) // pre-check: only 10 is a winner, so 11 looks free
+      .mockResolvedValueOnce({
+        ...drawWithWaitingList,
+        winners: [...drawWithWaitingList.winners, { id: 3, employeeId: 11 }],
+      } as never); // locked re-fetch: a concurrent redraw already claimed 11
+
+    // Act
+    await drawService.redrawWinner(1, "NON_PAYMENT", 1);
+
+    // Assert — 11 is now excluded, so 12 is selected instead.
+    expect(mockedDrawRepo.createWinner).toHaveBeenCalledWith(
+      expect.objectContaining({ employeeId: 12 }),
+      expect.anything(),
+    );
+  });
+
+  it("rejects with a 409 if the waiting list is exhausted by the time of the authoritative re-check, even though the pre-check found a candidate", async () => {
+    // Arrange
+    mockedDrawRepo.findByIdWithWinners
+      .mockResolvedValueOnce(drawWithWaitingList as never) // pre-check: 11 looks free
+      .mockResolvedValueOnce({
+        ...drawWithWaitingList,
+        winners: [
+          ...drawWithWaitingList.winners,
+          { id: 3, employeeId: 11 },
+          { id: 4, employeeId: 12 },
+        ],
+      } as never); // locked re-fetch: everyone left in the pool is already a winner
+
+    // Act / Assert
+    await expect(drawService.redrawWinner(1, "NON_PAYMENT", 1)).rejects.toMatchObject({ statusCode: 409 });
+    expect(mockedDrawRepo.createWinner).not.toHaveBeenCalled();
+  });
+
+  it("rejects with a 409 when the winner has no associated draw (defensive, should be unreachable)", async () => {
+    // Arrange
+    mockedWinnerRepo.findById.mockResolvedValue({ ...baseWinner, drawId: null } as never);
+
+    // Act / Assert
+    await expect(drawService.redrawWinner(1, "NON_PAYMENT", 1)).rejects.toMatchObject({ statusCode: 409 });
+    expect(mockedDrawRepo.findByIdWithWinners).not.toHaveBeenCalled();
+  });
+
+  it("rejects with a 404 when the draw can't be found", async () => {
+    // Arrange
+    mockedDrawRepo.findByIdWithWinners.mockResolvedValue(null);
+
+    // Act / Assert
+    await expect(drawService.redrawWinner(1, "NON_PAYMENT", 1)).rejects.toMatchObject({ statusCode: 404 });
+  });
+
+  it("rejects with a 404 when the device can't be found", async () => {
+    // Arrange
+    mockedDeviceRepo.findById.mockResolvedValue(null);
+
+    // Act / Assert
+    await expect(drawService.redrawWinner(1, "NON_PAYMENT", 1)).rejects.toMatchObject({ statusCode: 404 });
   });
 });

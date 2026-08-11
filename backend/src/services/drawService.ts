@@ -1,14 +1,36 @@
-import type { Draw } from "@prisma/client";
+import type { Draw, RedrawReason, Winner } from "@prisma/client";
 
 import { prisma } from "../config/prisma";
 import { AppError } from "../middlewares/errorHandler";
+import { auditLogRepository } from "../repositories/auditLogRepository";
 import { deviceRepository } from "../repositories/deviceRepository";
 import type { DrawWithWinners } from "../repositories/drawRepository";
 import { drawRepository } from "../repositories/drawRepository";
 import { employeeRepository } from "../repositories/employeeRepository";
 import { registrationRepository } from "../repositories/registrationRepository";
+import { winnerRepository } from "../repositories/winnerRepository";
 import { generateSeed, seededShuffle } from "../utils/rng";
 import { eligibilityService } from "./eligibilityService";
+
+// Walks `candidatePool` in order, skipping anyone in `excludeEmployeeIds`
+// and re-validating each remaining candidate's employee-level eligibility
+// right now, returning the first who qualifies (or null if the waiting
+// list is exhausted). Shared by redrawWinner()'s pre-transaction fast-fail
+// check and its authoritative, lock-protected re-selection — see the
+// comment on that second call site for why both are needed.
+async function selectNextEligibleCandidate(
+  candidatePool: number[],
+  excludeEmployeeIds: ReadonlySet<number>,
+): Promise<number | null> {
+  for (const employeeId of candidatePool) {
+    if (excludeEmployeeIds.has(employeeId)) continue;
+    const employee = await employeeRepository.findById(employeeId);
+    if (employee && eligibilityService.checkEmployeeAttributes(employee).eligible) {
+      return employeeId;
+    }
+  }
+  return null;
+}
 
 export const drawService = {
   // Admin-only surface (see routes/adminDrawRoutes.ts). Implements
@@ -99,5 +121,119 @@ export const drawService = {
       throw new AppError(500, "Draw was created but could not be reloaded");
     }
     return result;
+  },
+
+  // Admin-only surface (see routes/adminWinnerRoutes.ts — mounted under
+  // /admin/winners/:id/redraw, since the action targets a specific winner
+  // slot). Implements docs/03-App-Flow.md's "Draw Flow (detail)" step 6:
+  // when a winner declines, doesn't pay, doesn't show, or an admin
+  // overrides the result, this re-runs selection against the *same*
+  // draw's original shuffled pool — not a fresh random draw — walking it
+  // in order past anyone already a winner for this draw, and picks the
+  // first candidate who's still eligible today.
+  async redrawWinner(winnerId: number, reason: RedrawReason, adminId: number): Promise<Winner> {
+    const originalWinner = await winnerRepository.findById(winnerId);
+    if (!originalWinner) {
+      throw new AppError(404, "Winner not found");
+    }
+    if (originalWinner.paymentStatus === "PAID") {
+      throw new AppError(409, "Cannot redraw a winner who has already paid");
+    }
+    if (!originalWinner.drawId) {
+      // Every winner created by runDraw() has a drawId; drawId is only
+      // nullable in the schema for forward-compatibility. Defensive, not
+      // expected to be reachable in practice.
+      throw new AppError(409, "This winner has no associated draw to redraw against");
+    }
+    if (await winnerRepository.findByRedrawOf(winnerId)) {
+      throw new AppError(409, "This winner has already been redrawn");
+    }
+
+    const draw = await drawRepository.findByIdWithWinners(originalWinner.drawId);
+    if (!draw) {
+      throw new AppError(404, "Draw not found");
+    }
+    const device = await deviceRepository.findById(draw.deviceId);
+    if (!device) {
+      throw new AppError(404, "Device not found");
+    }
+
+    // Draw.candidatePoolSnapshot is a Prisma Json column (typed as
+    // Prisma.JsonValue), so it isn't statically known to be a number[] —
+    // but it's exactly what runDraw() wrote into it (see
+    // drawRepository.ts's CreateDrawData), so this cast is safe.
+    const candidatePool = draw.candidatePoolSnapshot as number[];
+
+    // Fast pre-transaction check: fail fast (no lock, no transaction) if
+    // the waiting list is obviously exhausted already. This pick is
+    // *not* what actually gets used to create the replacement — see the
+    // authoritative re-selection under the draw lock below, which is
+    // what closes the real race this pre-check can't.
+    const currentWinnerEmployeeIds = new Set(draw.winners.map((winner) => winner.employeeId));
+    if ((await selectNextEligibleCandidate(candidatePool, currentWinnerEmployeeIds)) === null) {
+      throw new AppError(409, "No remaining eligible candidates in the waiting list");
+    }
+
+    return prisma.$transaction(async (tx) => {
+      // Lock the *draw*, not just the winner being redrawn — the
+      // contested resource here is "who's the next eligible waiting-list
+      // candidate", which is shared across every winner slot on this
+      // draw, not scoped to any one of them. Two concurrent redraws of
+      // two *different* winner slots on the same draw could otherwise
+      // both compute the same next-in-line candidate before either
+      // commits (locking only the specific winnerId wouldn't catch
+      // that — they're different rows). Locking the draw serializes
+      // every redraw against it, the same way runDraw()'s device lock
+      // serializes every draw attempt against that device.
+      await drawRepository.lockForUpdate(draw.id, tx);
+
+      const lockedWinner = await winnerRepository.findById(winnerId, tx);
+      if (!lockedWinner) {
+        throw new AppError(404, "Winner not found");
+      }
+      if (lockedWinner.paymentStatus === "PAID") {
+        throw new AppError(409, "Cannot redraw a winner who has already paid");
+      }
+      if (await winnerRepository.findByRedrawOf(winnerId, tx)) {
+        throw new AppError(409, "This winner has already been redrawn");
+      }
+
+      // Re-run selection from scratch against a fresh read of the draw's
+      // current winners, taken *after* acquiring the lock — this is the
+      // authoritative pick, not the pre-check above. Any winner created
+      // by a concurrent redraw that committed while this call was
+      // waiting for the lock is now visible here and correctly excluded.
+      const lockedDraw = await drawRepository.findByIdWithWinners(draw.id, tx);
+      if (!lockedDraw) {
+        throw new AppError(404, "Draw not found");
+      }
+      const lockedCurrentWinnerEmployeeIds = new Set(lockedDraw.winners.map((winner) => winner.employeeId));
+      const nextWinnerEmployeeId = await selectNextEligibleCandidate(
+        candidatePool,
+        lockedCurrentWinnerEmployeeIds,
+      );
+      if (nextWinnerEmployeeId === null) {
+        throw new AppError(409, "No remaining eligible candidates in the waiting list");
+      }
+
+      const newWinner = await drawRepository.createWinner(
+        {
+          employeeId: nextWinnerEmployeeId,
+          deviceId: draw.deviceId,
+          drawId: draw.id,
+          priceDue: device.price,
+          redrawOf: winnerId,
+          redrawReason: reason,
+        },
+        tx,
+      );
+      await employeeRepository.markAsWinner(nextWinnerEmployeeId, tx);
+      await auditLogRepository.create(
+        { adminId, action: "REDRAW_WINNER", entity: "Winner", entityId: newWinner.id },
+        tx,
+      );
+
+      return newWinner;
+    });
   },
 };

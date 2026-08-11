@@ -1,6 +1,13 @@
-import type { PaymentStatus, Winner } from "@prisma/client";
+import type { PaymentStatus, Prisma, Winner } from "@prisma/client";
 
 import { prisma } from "../config/prisma";
+
+// Accepts either the shared client or an interactive-transaction client —
+// the redraw flow (services/drawService.ts's redrawWinner()) re-reads a
+// winner row inside a $transaction (under drawRepository's own draw-level
+// lock — see the comment on drawRepository.lockForUpdate() for why the
+// lock is scoped there, not here).
+type Db = typeof prisma | Prisma.TransactionClient;
 
 export interface WinnerAdminRow extends Winner {
   employee: {
@@ -24,6 +31,12 @@ export interface WinnerListFilters {
   deviceId?: number;
   employeeId?: number;
   paymentStatus?: PaymentStatus;
+}
+
+export interface UpdatePaymentData {
+  paymentStatus: PaymentStatus;
+  paymentMethod: string | null;
+  paymentDate: Date | null;
 }
 
 export const winnerRepository = {
@@ -53,5 +66,24 @@ export const winnerRepository = {
         },
       },
     });
+  },
+
+  findById(id: number, db: Db = prisma): Promise<Winner | null> {
+    return db.winner.findUnique({ where: { id } });
+  },
+
+  // A winner slot can only be redrawn once — this is how
+  // drawService.redrawWinner() checks whether a given winner has already
+  // been replaced, both for the fast pre-check and the locked re-check.
+  findByRedrawOf(winnerId: number, db: Db = prisma): Promise<Winner | null> {
+    return db.winner.findFirst({ where: { redrawOf: winnerId } });
+  },
+
+  updatePayment(id: number, data: UpdatePaymentData, db: Db = prisma): Promise<Winner> {
+    return db.winner.update({ where: { id }, data });
+  },
+
+  updateHandover(id: number, handoverDate: Date, db: Db = prisma): Promise<Winner> {
+    return db.winner.update({ where: { id }, data: { handoverDate } });
   },
 };

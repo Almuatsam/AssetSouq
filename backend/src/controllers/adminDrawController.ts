@@ -1,19 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 
-import { AppError } from "../middlewares/errorHandler";
 import { drawService } from "../services/drawService";
+import { requireAdminId } from "../utils/requestUtils";
 import { runDrawSchema } from "../validators/adminDrawValidators";
-
-// requireRole("ADMIN") always runs before this on the route (see
-// routes/adminDrawRoutes.ts), so req.user is present in practice — this
-// just keeps that assumption type-safe rather than asserting it. Mirrors
-// registrationController.ts's requireEmployeeId for the employee side.
-function requireAdminId(req: Request): number {
-  if (!req.user) {
-    throw new AppError(401, "Authentication required");
-  }
-  return req.user.id;
-}
 
 export const adminDrawController = {
   async run(req: Request, res: Response, next: NextFunction) {

@@ -75,6 +75,10 @@ export const adminDrawWriteRateLimiter = createUserKeyedRateLimiter(10);
 
 export const adminWinnerReadRateLimiter = createUserKeyedRateLimiter(120);
 
+// Recording a payment/handover is routine admin bookkeeping — same
+// budget as the other resources' write limiters.
+export const adminWinnerWriteRateLimiter = createUserKeyedRateLimiter(60);
+
 // Read-only, no side effects — a generous ceiling just to stop naive
 // scripted abuse, not to bound legitimate browsing.
 export const deviceRateLimiter = rateLimit({
