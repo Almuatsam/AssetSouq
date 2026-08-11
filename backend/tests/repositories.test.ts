@@ -13,25 +13,51 @@ import { registrationRepository } from "../src/repositories/registrationReposito
 jest.mock("../src/config/prisma", () => ({
   prisma: {
     admin: { findUnique: jest.fn(), update: jest.fn() },
-    employee: { findUnique: jest.fn(), findMany: jest.fn(), create: jest.fn(), update: jest.fn() },
-    device: { findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
+    employee: {
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      count: jest.fn(),
+    },
+    device: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      groupBy: jest.fn(),
+    },
     registration: {
       findFirst: jest.fn(),
       create: jest.fn(),
       findUnique: jest.fn(),
       findMany: jest.fn(),
       update: jest.fn(),
+      groupBy: jest.fn(),
     },
   },
 }));
 
 const mockedPrisma = prisma as unknown as {
   admin: { findUnique: jest.Mock; update: jest.Mock };
-  employee: { findUnique: jest.Mock; findMany: jest.Mock; create: jest.Mock; update: jest.Mock };
-  device: { findMany: jest.Mock; findUnique: jest.Mock; create: jest.Mock; update: jest.Mock };
+  employee: {
+    findUnique: jest.Mock;
+    findMany: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+    count: jest.Mock;
+  };
+  device: {
+    findMany: jest.Mock;
+    findUnique: jest.Mock;
+    create: jest.Mock;
+    update: jest.Mock;
+    groupBy: jest.Mock;
+  };
   registration: {
     findFirst: jest.Mock;
     create: jest.Mock;
+    groupBy: jest.Mock;
     findUnique: jest.Mock;
     findMany: jest.Mock;
     update: jest.Mock;
@@ -157,6 +183,25 @@ describe("employeeRepository", () => {
       data: { active: false },
     });
   });
+
+  it("countStats() runs total/active/eligible counts in parallel", async () => {
+    // Arrange
+    mockedPrisma.employee.count
+      .mockResolvedValueOnce(10)
+      .mockResolvedValueOnce(8)
+      .mockResolvedValueOnce(5);
+
+    // Act
+    const result = await employeeRepository.countStats();
+
+    // Assert
+    expect(result).toEqual({ total: 10, active: 8, eligible: 5 });
+    expect(mockedPrisma.employee.count).toHaveBeenNthCalledWith(1);
+    expect(mockedPrisma.employee.count).toHaveBeenNthCalledWith(2, { where: { active: true } });
+    expect(mockedPrisma.employee.count).toHaveBeenNthCalledWith(3, {
+      where: { active: true, eligible: true },
+    });
+  });
 });
 
 describe("deviceRepository", () => {
@@ -228,6 +273,24 @@ describe("deviceRepository", () => {
     expect(mockedPrisma.device.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: { status: "REMOVED" },
+    });
+  });
+
+  it("countByStatus() groups by status and defaults every status to 0", async () => {
+    // Arrange — only 2 of the 4 statuses have any rows.
+    mockedPrisma.device.groupBy.mockResolvedValue([
+      { status: "AVAILABLE", _count: { _all: 7 } },
+      { status: "REMOVED", _count: { _all: 2 } },
+    ]);
+
+    // Act
+    const result = await deviceRepository.countByStatus();
+
+    // Assert
+    expect(result).toEqual({ AVAILABLE: 7, REMOVED: 2, DRAWN: 0, SOLD: 0 });
+    expect(mockedPrisma.device.groupBy).toHaveBeenCalledWith({
+      by: ["status"],
+      _count: { _all: true },
     });
   });
 });
@@ -375,6 +438,21 @@ describe("registrationRepository", () => {
     expect(mockedPrisma.registration.update).toHaveBeenCalledWith({
       where: { id: 1 },
       data: { status: "WITHDRAWN" },
+    });
+  });
+
+  it("countByStatus() groups by status and defaults every status to 0", async () => {
+    // Arrange — only 1 of the 4 statuses has any rows.
+    mockedPrisma.registration.groupBy.mockResolvedValue([{ status: "ELIGIBLE", _count: { _all: 3 } }]);
+
+    // Act
+    const result = await registrationRepository.countByStatus();
+
+    // Assert
+    expect(result).toEqual({ PENDING: 0, ELIGIBLE: 3, INELIGIBLE: 0, WITHDRAWN: 0 });
+    expect(mockedPrisma.registration.groupBy).toHaveBeenCalledWith({
+      by: ["status"],
+      _count: { _all: true },
     });
   });
 });

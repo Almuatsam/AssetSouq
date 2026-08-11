@@ -37,4 +37,17 @@ export const deviceRepository = {
   update(id: number, data: UpdateDeviceData): Promise<Device> {
     return prisma.device.update({ where: { id }, data });
   },
+
+  // Admin dashboard stats (see services/dashboardService.ts). Every
+  // DeviceStatus key is always present, defaulted to 0 — groupBy only
+  // returns rows for statuses that actually have at least one device, and
+  // a status with zero devices should still show as 0, not be missing.
+  async countByStatus(): Promise<Record<DeviceStatus, number>> {
+    const rows = await prisma.device.groupBy({ by: ["status"], _count: { _all: true } });
+    const counts: Record<DeviceStatus, number> = { AVAILABLE: 0, REMOVED: 0, DRAWN: 0, SOLD: 0 };
+    for (const row of rows) {
+      counts[row.status] = row._count._all;
+    }
+    return counts;
+  },
 };

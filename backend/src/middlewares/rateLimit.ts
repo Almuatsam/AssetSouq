@@ -61,6 +61,11 @@ export const adminEmployeeReadRateLimiter = createUserKeyedRateLimiter(120);
 export const adminRegistrationWriteRateLimiter = createUserKeyedRateLimiter(60);
 export const adminRegistrationReadRateLimiter = createUserKeyedRateLimiter(120);
 
+// Read-only, no side effects, and expected to be hit once per dashboard
+// page load rather than per-row like the list endpoints above — a
+// generous ceiling is enough.
+export const adminDashboardReadRateLimiter = createUserKeyedRateLimiter(120);
+
 // Read-only, no side effects — a generous ceiling just to stop naive
 // scripted abuse, not to bound legitimate browsing.
 export const deviceRateLimiter = rateLimit({

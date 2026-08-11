@@ -141,4 +141,21 @@ export const registrationRepository = {
   updateStatus(id: number, status: RegistrationStatus): Promise<Registration> {
     return prisma.registration.update({ where: { id }, data: { status } });
   },
+
+  // Admin dashboard stats (see services/dashboardService.ts). Every
+  // RegistrationStatus key is always present, defaulted to 0 — see the
+  // matching comment on deviceRepository.countByStatus().
+  async countByStatus(): Promise<Record<RegistrationStatus, number>> {
+    const rows = await prisma.registration.groupBy({ by: ["status"], _count: { _all: true } });
+    const counts: Record<RegistrationStatus, number> = {
+      PENDING: 0,
+      ELIGIBLE: 0,
+      INELIGIBLE: 0,
+      WITHDRAWN: 0,
+    };
+    for (const row of rows) {
+      counts[row.status] = row._count._all;
+    }
+    return counts;
+  },
 };

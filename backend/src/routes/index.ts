@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { adminDashboardRouter } from "./adminDashboardRoutes";
 import { adminDeviceRouter } from "./adminDeviceRoutes";
 import { adminEmployeeRouter } from "./adminEmployeeRoutes";
 import { adminRegistrationRouter } from "./adminRegistrationRoutes";
@@ -19,6 +20,7 @@ router.use("/registrations", registrationRouter);
 router.use("/admin/devices", adminDeviceRouter);
 router.use("/admin/employees", adminEmployeeRouter);
 router.use("/admin/registrations", adminRegistrationRouter);
+router.use("/admin/dashboard", adminDashboardRouter);
 
 // Remaining feature routers are mounted here as they're implemented, e.g.:
 // router.use("/draws", drawRouter);

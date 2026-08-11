@@ -60,4 +60,17 @@ export const employeeRepository = {
   update(id: number, data: UpdateEmployeeData): Promise<Employee> {
     return prisma.employee.update({ where: { id }, data });
   },
+
+  // Admin dashboard stats (see services/dashboardService.ts). "eligible"
+  // here means currently raffle-eligible in practice — active AND
+  // eligible — not just the raw `eligible` column, which stays true for
+  // deactivated employees until someone updates it.
+  async countStats(): Promise<{ total: number; active: number; eligible: number }> {
+    const [total, active, eligible] = await Promise.all([
+      prisma.employee.count(),
+      prisma.employee.count({ where: { active: true } }),
+      prisma.employee.count({ where: { active: true, eligible: true } }),
+    ]);
+    return { total, active, eligible };
+  },
 };
