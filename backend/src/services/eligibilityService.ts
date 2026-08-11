@@ -1,3 +1,5 @@
+import type { Employee } from "@prisma/client";
+
 import { employeeRepository } from "../repositories/employeeRepository";
 import { registrationRepository } from "../repositories/registrationRepository";
 import { monthsBetween } from "../utils/dateUtils";
@@ -15,33 +17,49 @@ export interface EligibilityResult {
   reasons: string[];
 }
 
+// The employee-attribute rules only (1, 3, 4) — no registration lookup.
+// Split out from checkEmployee() specifically so the draw engine
+// (services/drawService.ts) can re-validate a candidate at draw time
+// without checkEmployee's "no other active registration" check (rules 2
+// & 5) spuriously firing: at draw time, the candidate's own active
+// ELIGIBLE registration for the device being drawn *is* the active
+// registration that check would find, so reusing checkEmployee wholesale
+// would disqualify every single candidate, every time.
+function checkEmployeeAttributes(employee: Employee): EligibilityResult {
+  const reasons: string[] = [];
+
+  // Business rule 1: Only Active Employees.
+  if (!employee.active) {
+    reasons.push("Employee account is not active");
+  }
+  // Admin-set override (separate from the computed rules below) —
+  // lets an admin disable participation for a reason not otherwise
+  // captured (docs/04-Backend-Schema.md Employee.eligible).
+  if (!employee.eligible) {
+    reasons.push("Employee is marked ineligible");
+  }
+  // Business rule 3: Laptop Holders Cannot Participate.
+  if (employee.laptopHolder) {
+    reasons.push("Laptop holders cannot participate");
+  }
+  // Business rule 4: Previous Winners Wait 24 Months.
+  if (employee.lastWinnerDate && monthsBetween(employee.lastWinnerDate) < WINNER_COOLDOWN_MONTHS) {
+    reasons.push(`Must wait ${WINNER_COOLDOWN_MONTHS} months after a previous win`);
+  }
+
+  return { eligible: reasons.length === 0, reasons };
+}
+
 export const eligibilityService = {
+  checkEmployeeAttributes,
+
   async checkEmployee(employeeId: number): Promise<EligibilityResult> {
     const employee = await employeeRepository.findById(employeeId);
     if (!employee) {
       return { eligible: false, reasons: ["Employee not found"] };
     }
 
-    const reasons: string[] = [];
-
-    // Business rule 1: Only Active Employees.
-    if (!employee.active) {
-      reasons.push("Employee account is not active");
-    }
-    // Admin-set override (separate from the computed rules below) —
-    // lets an admin disable participation for a reason not otherwise
-    // captured (docs/04-Backend-Schema.md Employee.eligible).
-    if (!employee.eligible) {
-      reasons.push("Employee is marked ineligible");
-    }
-    // Business rule 3: Laptop Holders Cannot Participate.
-    if (employee.laptopHolder) {
-      reasons.push("Laptop holders cannot participate");
-    }
-    // Business rule 4: Previous Winners Wait 24 Months.
-    if (employee.lastWinnerDate && monthsBetween(employee.lastWinnerDate) < WINNER_COOLDOWN_MONTHS) {
-      reasons.push(`Must wait ${WINNER_COOLDOWN_MONTHS} months after a previous win`);
-    }
+    const reasons = [...checkEmployeeAttributes(employee).reasons];
 
     // Business rules 2 & 5: One Registration Per Employee / One Device
     // Per Employee — merged into "no other active registration". Note:

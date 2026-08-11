@@ -152,3 +152,72 @@ describe("eligibilityService.checkEmployee", () => {
     expect(result.reasons.length).toBeGreaterThanOrEqual(2);
   });
 });
+
+describe("eligibilityService.checkEmployeeAttributes", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("is eligible when every attribute rule passes, with no registration lookup at all", () => {
+    // Act
+    const result = eligibilityService.checkEmployeeAttributes(baseEmployee);
+
+    // Assert
+    expect(result).toEqual({ eligible: true, reasons: [] });
+    expect(mockedRegistrationRepo.findActiveByEmployeeId).not.toHaveBeenCalled();
+  });
+
+  it("flags an inactive employee", () => {
+    // Act
+    const result = eligibilityService.checkEmployeeAttributes({ ...baseEmployee, active: false });
+
+    // Assert
+    expect(result.eligible).toBe(false);
+    expect(result.reasons).toContain("Employee account is not active");
+  });
+
+  it("flags a laptop holder", () => {
+    // Act
+    const result = eligibilityService.checkEmployeeAttributes({ ...baseEmployee, laptopHolder: true });
+
+    // Assert
+    expect(result.eligible).toBe(false);
+    expect(result.reasons).toContain("Laptop holders cannot participate");
+  });
+
+  it("flags a recent previous winner (within 24 months)", () => {
+    // Arrange
+    const tenMonthsAgo = new Date();
+    tenMonthsAgo.setMonth(tenMonthsAgo.getMonth() - 10);
+
+    // Act
+    const result = eligibilityService.checkEmployeeAttributes({ ...baseEmployee, lastWinnerDate: tenMonthsAgo });
+
+    // Assert
+    expect(result.eligible).toBe(false);
+    expect(result.reasons).toContain("Must wait 24 months after a previous win");
+  });
+
+  // Regression: this is exactly the scenario checkEmployeeAttributes exists
+  // to support — an employee with a currently-active ELIGIBLE registration
+  // (the one being drawn) must not be disqualified for having it, unlike
+  // checkEmployee()'s registration-conflict check.
+  it("does not check for an existing active registration at all", () => {
+    // Arrange — if this somehow called findActiveByEmployeeId, mocking it
+    // to return a conflicting registration would make the test fail,
+    // proving the attribute-only check never even looks.
+    mockedRegistrationRepo.findActiveByEmployeeId.mockResolvedValue({
+      id: 5,
+      employeeId: 1,
+      deviceId: 2,
+      agreed: true,
+      submittedAt: new Date(),
+      status: "ELIGIBLE",
+    });
+
+    // Act
+    const result = eligibilityService.checkEmployeeAttributes(baseEmployee);
+
+    // Assert
+    expect(result).toEqual({ eligible: true, reasons: [] });
+    expect(mockedRegistrationRepo.findActiveByEmployeeId).not.toHaveBeenCalled();
+  });
+});

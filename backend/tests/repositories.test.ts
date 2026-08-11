@@ -7,8 +7,10 @@
 import { prisma } from "../src/config/prisma";
 import { adminRepository } from "../src/repositories/adminRepository";
 import { deviceRepository } from "../src/repositories/deviceRepository";
+import { drawRepository } from "../src/repositories/drawRepository";
 import { employeeRepository } from "../src/repositories/employeeRepository";
 import { registrationRepository } from "../src/repositories/registrationRepository";
+import { winnerRepository } from "../src/repositories/winnerRepository";
 
 jest.mock("../src/config/prisma", () => ({
   prisma: {
@@ -35,6 +37,8 @@ jest.mock("../src/config/prisma", () => ({
       update: jest.fn(),
       groupBy: jest.fn(),
     },
+    draw: { create: jest.fn(), findUnique: jest.fn() },
+    winner: { create: jest.fn(), findMany: jest.fn() },
   },
 }));
 
@@ -62,6 +66,8 @@ const mockedPrisma = prisma as unknown as {
     findMany: jest.Mock;
     update: jest.Mock;
   };
+  draw: { create: jest.Mock; findUnique: jest.Mock };
+  winner: { create: jest.Mock; findMany: jest.Mock };
 };
 
 beforeEach(() => jest.clearAllMocks());
@@ -202,6 +208,29 @@ describe("employeeRepository", () => {
       where: { active: true, eligible: true },
     });
   });
+
+  it("markAsWinner() sets lastWinnerDate to a fresh timestamp for the given employee", async () => {
+    // Act
+    await employeeRepository.markAsWinner(10);
+
+    // Assert
+    expect(mockedPrisma.employee.update).toHaveBeenCalledWith({
+      where: { id: 10 },
+      data: { lastWinnerDate: expect.any(Date) },
+    });
+  });
+
+  it("markAsWinner() accepts an explicit transaction client in place of the default shared one", async () => {
+    // Arrange
+    const tx = { employee: { update: jest.fn() } } as never;
+
+    // Act
+    await employeeRepository.markAsWinner(10, tx);
+
+    // Assert
+    expect((tx as { employee: { update: jest.Mock } }).employee.update).toHaveBeenCalled();
+    expect(mockedPrisma.employee.update).not.toHaveBeenCalled();
+  });
 });
 
 describe("deviceRepository", () => {
@@ -222,6 +251,20 @@ describe("deviceRepository", () => {
 
     // Assert
     expect(mockedPrisma.device.findUnique).toHaveBeenCalledWith({ where: { id: 5 } });
+  });
+
+  it("findById() accepts an explicit transaction client in place of the default shared one", async () => {
+    // Arrange
+    const tx = { device: { findUnique: jest.fn() } } as never;
+
+    // Act
+    await deviceRepository.findById(5, tx);
+
+    // Assert
+    expect((tx as { device: { findUnique: jest.Mock } }).device.findUnique).toHaveBeenCalledWith({
+      where: { id: 5 },
+    });
+    expect(mockedPrisma.device.findUnique).not.toHaveBeenCalled();
   });
 
   it("findByAssetTag() queries by assetTag", async () => {
@@ -292,6 +335,40 @@ describe("deviceRepository", () => {
       by: ["status"],
       _count: { _all: true },
     });
+  });
+
+  it("markDrawn() sets the device's status to DRAWN", async () => {
+    // Act
+    await deviceRepository.markDrawn(1);
+
+    // Assert
+    expect(mockedPrisma.device.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { status: "DRAWN" },
+    });
+  });
+
+  it("markDrawn() accepts an explicit transaction client in place of the default shared one", async () => {
+    // Arrange
+    const tx = { device: { update: jest.fn() } } as never;
+
+    // Act
+    await deviceRepository.markDrawn(1, tx);
+
+    // Assert
+    expect((tx as { device: { update: jest.Mock } }).device.update).toHaveBeenCalled();
+    expect(mockedPrisma.device.update).not.toHaveBeenCalled();
+  });
+
+  it("lockForUpdate() issues a locking read against the device row", async () => {
+    // Arrange
+    const tx = { $queryRaw: jest.fn().mockResolvedValue([]) } as never;
+
+    // Act
+    await deviceRepository.lockForUpdate(1, tx);
+
+    // Assert
+    expect((tx as { $queryRaw: jest.Mock }).$queryRaw).toHaveBeenCalled();
   });
 });
 
@@ -454,5 +531,127 @@ describe("registrationRepository", () => {
       by: ["status"],
       _count: { _all: true },
     });
+  });
+
+  it("findEligibleByDeviceId() queries ELIGIBLE registrations for the device", async () => {
+    // Act
+    await registrationRepository.findEligibleByDeviceId(1);
+
+    // Assert
+    expect(mockedPrisma.registration.findMany).toHaveBeenCalledWith({
+      where: { deviceId: 1, status: "ELIGIBLE" },
+    });
+  });
+});
+
+describe("drawRepository", () => {
+  it("create() persists a new draw", async () => {
+    // Arrange
+    const data = { deviceId: 1, rngSeed: "seed", candidatePoolSnapshot: [10, 11], drawnByAdminId: 1 };
+
+    // Act
+    await drawRepository.create(data);
+
+    // Assert
+    expect(mockedPrisma.draw.create).toHaveBeenCalledWith({ data });
+  });
+
+  it("create() accepts an explicit transaction client in place of the default shared one", async () => {
+    // Arrange
+    const tx = { draw: { create: jest.fn() } } as never;
+    const data = { deviceId: 1, rngSeed: "seed", candidatePoolSnapshot: [10], drawnByAdminId: 1 };
+
+    // Act
+    await drawRepository.create(data, tx);
+
+    // Assert
+    expect((tx as { draw: { create: jest.Mock } }).draw.create).toHaveBeenCalledWith({ data });
+    expect(mockedPrisma.draw.create).not.toHaveBeenCalled();
+  });
+
+  it("createWinner() persists a new winner", async () => {
+    // Arrange
+    const data = { employeeId: 10, deviceId: 1, drawId: 100, priceDue: "150.00" };
+
+    // Act
+    await drawRepository.createWinner(data as never);
+
+    // Assert
+    expect(mockedPrisma.winner.create).toHaveBeenCalledWith({ data });
+  });
+
+  it("createWinner() accepts an explicit transaction client in place of the default shared one", async () => {
+    // Arrange
+    const tx = { winner: { create: jest.fn() } } as never;
+    const data = { employeeId: 10, deviceId: 1, drawId: 100, priceDue: "150.00" };
+
+    // Act
+    await drawRepository.createWinner(data as never, tx);
+
+    // Assert
+    expect((tx as { winner: { create: jest.Mock } }).winner.create).toHaveBeenCalledWith({ data });
+    expect(mockedPrisma.winner.create).not.toHaveBeenCalled();
+  });
+
+  it("findByIdWithWinners() queries a draw by id, including winners and their employee context", async () => {
+    // Act
+    await drawRepository.findByIdWithWinners(100);
+
+    // Assert
+    expect(mockedPrisma.draw.findUnique).toHaveBeenCalledWith({
+      where: { id: 100 },
+      include: {
+        winners: {
+          select: {
+            id: true,
+            employeeId: true,
+            deviceId: true,
+            drawId: true,
+            priceDue: true,
+            paymentStatus: true,
+            employee: { select: { id: true, staffNumber: true, name: true, department: true } },
+          },
+        },
+      },
+    });
+  });
+});
+
+describe("winnerRepository", () => {
+  it("findAllForAdmin() queries with no filter by default, newest draw first, joined with employee and device", async () => {
+    // Act
+    await winnerRepository.findAllForAdmin({});
+
+    // Assert
+    expect(mockedPrisma.winner.findMany).toHaveBeenCalledWith({
+      where: { deviceId: undefined, employeeId: undefined, paymentStatus: undefined },
+      orderBy: { drawDate: "desc" },
+      include: {
+        employee: { select: { id: true, staffNumber: true, name: true, department: true } },
+        device: {
+          select: {
+            id: true,
+            assetTag: true,
+            deviceType: true,
+            brand: true,
+            model: true,
+            price: true,
+            status: true,
+          },
+        },
+      },
+    });
+  });
+
+  it("findAllForAdmin() filters by deviceId/employeeId/paymentStatus when given", async () => {
+    // Act
+    await winnerRepository.findAllForAdmin({ deviceId: 1, employeeId: 10, paymentStatus: "PAID" });
+
+    // Assert
+    expect(mockedPrisma.winner.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { deviceId: 1, employeeId: 10, paymentStatus: "PAID" },
+      }),
+    );
   });
 });

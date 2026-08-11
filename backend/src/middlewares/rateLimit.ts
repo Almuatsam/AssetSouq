@@ -66,6 +66,15 @@ export const adminRegistrationReadRateLimiter = createUserKeyedRateLimiter(120);
 // generous ceiling is enough.
 export const adminDashboardReadRateLimiter = createUserKeyedRateLimiter(120);
 
+// Running a draw is a rare, deliberate, high-consequence action (creates
+// Winner rows, flips a device to DRAWN, sets each winner's cooldown
+// timestamp) — a much tighter budget than the routine write limiters
+// above is appropriate; there's no legitimate reason to run many draws
+// per admin in a 15-minute window.
+export const adminDrawWriteRateLimiter = createUserKeyedRateLimiter(10);
+
+export const adminWinnerReadRateLimiter = createUserKeyedRateLimiter(120);
+
 // Read-only, no side effects — a generous ceiling just to stop naive
 // scripted abuse, not to bound legitimate browsing.
 export const deviceRateLimiter = rateLimit({

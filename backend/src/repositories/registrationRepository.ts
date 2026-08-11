@@ -102,6 +102,14 @@ export const registrationRepository = {
     return prisma.registration.findUnique({ where: { id } });
   },
 
+  // Draw engine (Phase 4, see services/drawService.ts) — the candidate
+  // pool for a draw: every ELIGIBLE registration for the device. PENDING/
+  // INELIGIBLE/WITHDRAWN are excluded — only ELIGIBLE registrations ever
+  // reach a draw (see registerInterest(), which writes ELIGIBLE directly).
+  findEligibleByDeviceId(deviceId: number): Promise<Registration[]> {
+    return prisma.registration.findMany({ where: { deviceId, status: "ELIGIBLE" } });
+  },
+
   findAllForAdmin(filters: RegistrationListFilters): Promise<RegistrationAdminRow[]> {
     return prisma.registration.findMany({
       where: {
