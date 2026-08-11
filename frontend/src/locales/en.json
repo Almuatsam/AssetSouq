@@ -63,10 +63,16 @@
   },
   "adminDashboard": {
     "welcome": "Welcome, {{username}}",
-    "comingSoon": "More of the admin dashboard is coming soon.",
     "manageDevices": "Manage Devices",
     "manageEmployees": "Manage Employees",
-    "manageRegistrations": "Manage Registrations"
+    "manageRegistrations": "Manage Registrations",
+    "statsLoadError": "Couldn't load dashboard stats. Please try again.",
+    "totalDevices": "Total Devices",
+    "totalEmployees": "Total Employees",
+    "activeEligibleEmployees": "{{active}} active, {{eligible}} eligible",
+    "totalRegistrations": "Total Registrations",
+    "devicesByStatus": "Devices by Status",
+    "registrationsByStatus": "Registrations by Status"
   },
   "deviceStatus": {
     "AVAILABLE": "Available",

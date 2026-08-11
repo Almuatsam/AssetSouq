@@ -63,10 +63,16 @@
   },
   "adminDashboard": {
     "welcome": "مرحباً، {{username}}",
-    "comingSoon": "بقية لوحة تحكم المسؤول قريباً.",
     "manageDevices": "إدارة الأجهزة",
     "manageEmployees": "إدارة الموظفين",
-    "manageRegistrations": "إدارة التسجيلات"
+    "manageRegistrations": "إدارة التسجيلات",
+    "statsLoadError": "تعذر تحميل إحصائيات لوحة التحكم. حاول مرة أخرى.",
+    "totalDevices": "إجمالي الأجهزة",
+    "totalEmployees": "إجمالي الموظفين",
+    "activeEligibleEmployees": "{{active}} نشط، {{eligible}} مؤهل",
+    "totalRegistrations": "إجمالي التسجيلات",
+    "devicesByStatus": "الأجهزة حسب الحالة",
+    "registrationsByStatus": "التسجيلات حسب الحالة"
   },
   "deviceStatus": {
     "AVAILABLE": "متاح",
