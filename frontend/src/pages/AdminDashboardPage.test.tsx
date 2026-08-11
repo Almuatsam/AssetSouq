@@ -72,4 +72,21 @@ describe("AdminDashboardPage", () => {
       "/admin/employees",
     );
   });
+
+  it("links to the registration management page", () => {
+    // Arrange
+    setStoredSession({
+      token: "tok",
+      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null } },
+    });
+
+    // Act
+    renderWithProviders(<AdminDashboardPage />);
+
+    // Assert
+    expect(screen.getByRole("link", { name: /manage registrations/i })).toHaveAttribute(
+      "href",
+      "/admin/registrations",
+    );
+  });
 });

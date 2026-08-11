@@ -30,6 +30,9 @@ export default function AdminDashboardPage() {
           <Link to="/admin/employees" className="font-medium text-primary hover:underline">
             {t("adminDashboard.manageEmployees")}
           </Link>
+          <Link to="/admin/registrations" className="font-medium text-primary hover:underline">
+            {t("adminDashboard.manageRegistrations")}
+          </Link>
         </Card>
 
         <p className="text-sm text-gray">{t("adminDashboard.comingSoon")}</p>

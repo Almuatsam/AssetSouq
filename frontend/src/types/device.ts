@@ -65,3 +65,26 @@ export interface Registration {
   status: RegistrationStatus;
   device: RegistrationDeviceSummary;
 }
+
+export interface RegistrationEmployeeSummary {
+  id: number;
+  staffNumber: string;
+  name: string;
+  department: string;
+}
+
+// Admin-only surface (see services/adminRegistrationService.ts) — every
+// registration, joined with enough employee context to make sense of it
+// in a list without a second lookup.
+export interface AdminRegistrationRow extends Registration {
+  employee: RegistrationEmployeeSummary;
+}
+
+// Mirrors backend/src/validators/adminRegistrationValidators.ts's
+// listRegistrationsQuerySchema.
+export interface RegistrationListFilters {
+  status?: RegistrationStatus;
+  deviceId?: number;
+  employeeId?: number;
+  search?: string;
+}

@@ -65,7 +65,8 @@
     "welcome": "Welcome, {{username}}",
     "comingSoon": "More of the admin dashboard is coming soon.",
     "manageDevices": "Manage Devices",
-    "manageEmployees": "Manage Employees"
+    "manageEmployees": "Manage Employees",
+    "manageRegistrations": "Manage Registrations"
   },
   "deviceStatus": {
     "AVAILABLE": "Available",
@@ -159,5 +160,35 @@
     "cancel": "Cancel",
     "notFound": "Employee not found.",
     "loadError": "Couldn't load this employee. Please try again."
+  },
+  "adminRegistrations": {
+    "title": "Manage Registrations",
+    "subtitle": "Review registrations and update their status.",
+    "filterLabel": "Status",
+    "filterAll": "All",
+    "searchLabel": "Search",
+    "searchPlaceholder": "Employee name, staff number, or asset tag",
+    "empty": "No registrations found.",
+    "loadError": "Couldn't load registrations. Please try again.",
+    "employee": "Employee",
+    "department": "Department",
+    "device": "Device",
+    "price": "Price",
+    "submitted": "Submitted",
+    "status": "Status",
+    "actions": "Actions",
+    "markEligible": "Mark Eligible",
+    "markIneligible": "Mark Ineligible",
+    "withdraw": "Withdraw",
+    "confirmMarkEligible": "Mark this registration as eligible?",
+    "confirmMarkIneligible": "Mark this registration as ineligible? This cannot be undone.",
+    "confirmWithdraw": "Withdraw this registration on the employee's behalf? This cannot be undone.",
+    "actionError": "Couldn't complete that action. Please try again.",
+    "statusValues": {
+      "PENDING": "Pending",
+      "ELIGIBLE": "Eligible",
+      "INELIGIBLE": "Ineligible",
+      "WITHDRAWN": "Withdrawn"
+    }
   }
 }

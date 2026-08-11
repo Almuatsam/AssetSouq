@@ -7,6 +7,7 @@ import AdminDevicesPage from "@/pages/AdminDevicesPage";
 import AdminEmployeeFormPage from "@/pages/AdminEmployeeFormPage";
 import AdminEmployeesPage from "@/pages/AdminEmployeesPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
+import AdminRegistrationsPage from "@/pages/AdminRegistrationsPage";
 import DeviceDetailPage from "@/pages/DeviceDetailPage";
 import DevicesPage from "@/pages/DevicesPage";
 import EmployeeLoginPage from "@/pages/EmployeeLoginPage";
@@ -88,6 +89,14 @@ export default function App() {
         element={
           <ProtectedRoute requiredRole="ADMIN" redirectTo="/admin/login">
             <AdminEmployeeFormPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/registrations"
+        element={
+          <ProtectedRoute requiredRole="ADMIN" redirectTo="/admin/login">
+            <AdminRegistrationsPage />
           </ProtectedRoute>
         }
       />

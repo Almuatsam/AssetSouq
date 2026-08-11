@@ -65,7 +65,8 @@
     "welcome": "مرحباً، {{username}}",
     "comingSoon": "بقية لوحة تحكم المسؤول قريباً.",
     "manageDevices": "إدارة الأجهزة",
-    "manageEmployees": "إدارة الموظفين"
+    "manageEmployees": "إدارة الموظفين",
+    "manageRegistrations": "إدارة التسجيلات"
   },
   "deviceStatus": {
     "AVAILABLE": "متاح",
@@ -159,5 +160,35 @@
     "cancel": "إلغاء",
     "notFound": "الموظف غير موجود.",
     "loadError": "تعذر تحميل بيانات الموظف. حاول مرة أخرى."
+  },
+  "adminRegistrations": {
+    "title": "إدارة التسجيلات",
+    "subtitle": "مراجعة التسجيلات وتحديث حالتها.",
+    "filterLabel": "الحالة",
+    "filterAll": "الكل",
+    "searchLabel": "بحث",
+    "searchPlaceholder": "اسم الموظف أو الرقم الوظيفي أو الرقم التعريفي للجهاز",
+    "empty": "لا توجد تسجيلات.",
+    "loadError": "تعذر تحميل التسجيلات. حاول مرة أخرى.",
+    "employee": "الموظف",
+    "department": "القسم",
+    "device": "الجهاز",
+    "price": "السعر",
+    "submitted": "تاريخ التسجيل",
+    "status": "الحالة",
+    "actions": "الإجراءات",
+    "markEligible": "تعليم كمؤهل",
+    "markIneligible": "تعليم كغير مؤهل",
+    "withdraw": "سحب",
+    "confirmMarkEligible": "تعليم هذا التسجيل كمؤهل؟",
+    "confirmMarkIneligible": "تعليم هذا التسجيل كغير مؤهل؟ لا يمكن التراجع عن هذا الإجراء.",
+    "confirmWithdraw": "سحب هذا التسجيل نيابة عن الموظف؟ لا يمكن التراجع عن هذا الإجراء.",
+    "actionError": "تعذر إتمام هذا الإجراء. حاول مرة أخرى.",
+    "statusValues": {
+      "PENDING": "قيد الانتظار",
+      "ELIGIBLE": "مؤهل",
+      "INELIGIBLE": "غير مؤهل",
+      "WITHDRAWN": "مسحوب"
+    }
   }
 }
