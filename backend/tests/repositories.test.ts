@@ -15,7 +15,13 @@ jest.mock("../src/config/prisma", () => ({
     admin: { findUnique: jest.fn(), update: jest.fn() },
     employee: { findUnique: jest.fn(), findMany: jest.fn(), create: jest.fn(), update: jest.fn() },
     device: { findMany: jest.fn(), findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
-    registration: { findFirst: jest.fn(), create: jest.fn() },
+    registration: {
+      findFirst: jest.fn(),
+      create: jest.fn(),
+      findUnique: jest.fn(),
+      findMany: jest.fn(),
+      update: jest.fn(),
+    },
   },
 }));
 
@@ -23,7 +29,13 @@ const mockedPrisma = prisma as unknown as {
   admin: { findUnique: jest.Mock; update: jest.Mock };
   employee: { findUnique: jest.Mock; findMany: jest.Mock; create: jest.Mock; update: jest.Mock };
   device: { findMany: jest.Mock; findUnique: jest.Mock; create: jest.Mock; update: jest.Mock };
-  registration: { findFirst: jest.Mock; create: jest.Mock };
+  registration: {
+    findFirst: jest.Mock;
+    create: jest.Mock;
+    findUnique: jest.Mock;
+    findMany: jest.Mock;
+    update: jest.Mock;
+  };
 };
 
 beforeEach(() => jest.clearAllMocks());
@@ -289,6 +301,80 @@ describe("registrationRepository", () => {
           },
         },
       },
+    });
+  });
+
+  it("findById() queries by id", async () => {
+    // Act
+    await registrationRepository.findById(1);
+
+    // Assert
+    expect(mockedPrisma.registration.findUnique).toHaveBeenCalledWith({ where: { id: 1 } });
+  });
+
+  it("findAllForAdmin() queries with no filter by default, newest first, joined with employee and device", async () => {
+    // Act
+    await registrationRepository.findAllForAdmin({});
+
+    // Assert
+    expect(mockedPrisma.registration.findMany).toHaveBeenCalledWith({
+      where: { status: undefined, deviceId: undefined, employeeId: undefined },
+      orderBy: { submittedAt: "desc" },
+      include: {
+        employee: { select: { id: true, staffNumber: true, name: true, department: true } },
+        device: {
+          select: {
+            id: true,
+            assetTag: true,
+            deviceType: true,
+            brand: true,
+            model: true,
+            price: true,
+            status: true,
+          },
+        },
+      },
+    });
+  });
+
+  it("findAllForAdmin() filters by status/deviceId/employeeId when given", async () => {
+    // Act
+    await registrationRepository.findAllForAdmin({ status: "WITHDRAWN", deviceId: 1, employeeId: 10 });
+
+    // Assert
+    expect(mockedPrisma.registration.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { status: "WITHDRAWN", deviceId: 1, employeeId: 10 },
+      }),
+    );
+  });
+
+  it("findAllForAdmin() adds an OR search across employee name/staffNumber and device assetTag when a search term is given", async () => {
+    // Act
+    await registrationRepository.findAllForAdmin({ search: "Jane" });
+
+    // Assert
+    expect(mockedPrisma.registration.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          OR: [
+            { employee: { name: { contains: "Jane" } } },
+            { employee: { staffNumber: { contains: "Jane" } } },
+            { device: { assetTag: { contains: "Jane" } } },
+          ],
+        }),
+      }),
+    );
+  });
+
+  it("updateStatus() updates the given registration's status by id", async () => {
+    // Act
+    await registrationRepository.updateStatus(1, "WITHDRAWN");
+
+    // Assert
+    expect(mockedPrisma.registration.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { status: "WITHDRAWN" },
     });
   });
 });

@@ -58,6 +58,9 @@ export const adminDeviceReadRateLimiter = createUserKeyedRateLimiter(120);
 export const adminEmployeeWriteRateLimiter = createUserKeyedRateLimiter(60);
 export const adminEmployeeReadRateLimiter = createUserKeyedRateLimiter(120);
 
+export const adminRegistrationWriteRateLimiter = createUserKeyedRateLimiter(60);
+export const adminRegistrationReadRateLimiter = createUserKeyedRateLimiter(120);
+
 // Read-only, no side effects — a generous ceiling just to stop naive
 // scripted abuse, not to bound legitimate browsing.
 export const deviceRateLimiter = rateLimit({

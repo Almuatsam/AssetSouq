@@ -179,3 +179,127 @@ describe("registrationService.getMyRegistration", () => {
     expect(result).toBeNull();
   });
 });
+
+describe("registrationService.listAllForAdmin", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("passes the given filters through to the repository", async () => {
+    // Arrange
+    mockedRegistrationRepo.findAllForAdmin.mockResolvedValue([]);
+
+    // Act
+    await registrationService.listAllForAdmin({ status: "ELIGIBLE" });
+
+    // Assert
+    expect(mockedRegistrationRepo.findAllForAdmin).toHaveBeenCalledWith({ status: "ELIGIBLE" });
+  });
+});
+
+describe("registrationService.updateStatus", () => {
+  const baseRegistration = {
+    id: 1,
+    employeeId: 10,
+    deviceId: 1,
+    agreed: true,
+    submittedAt: new Date(),
+    status: "ELIGIBLE" as const,
+  };
+
+  beforeEach(() => jest.clearAllMocks());
+
+  it("rejects with a 404 when the registration doesn't exist", async () => {
+    // Arrange
+    mockedRegistrationRepo.findById.mockResolvedValue(null);
+
+    // Act / Assert
+    await expect(registrationService.updateStatus(999, "WITHDRAWN")).rejects.toMatchObject({
+      statusCode: 404,
+    });
+  });
+
+  it("allows ELIGIBLE -> WITHDRAWN", async () => {
+    // Arrange
+    mockedRegistrationRepo.findById.mockResolvedValue(baseRegistration as never);
+    mockedRegistrationRepo.updateStatus.mockResolvedValue({
+      ...baseRegistration,
+      status: "WITHDRAWN",
+    } as never);
+
+    // Act
+    const result = await registrationService.updateStatus(1, "WITHDRAWN");
+
+    // Assert
+    expect(result.status).toBe("WITHDRAWN");
+    expect(mockedRegistrationRepo.updateStatus).toHaveBeenCalledWith(1, "WITHDRAWN");
+  });
+
+  it("allows ELIGIBLE -> INELIGIBLE", async () => {
+    // Arrange
+    mockedRegistrationRepo.findById.mockResolvedValue(baseRegistration as never);
+    mockedRegistrationRepo.updateStatus.mockResolvedValue({
+      ...baseRegistration,
+      status: "INELIGIBLE",
+    } as never);
+
+    // Act
+    const result = await registrationService.updateStatus(1, "INELIGIBLE");
+
+    // Assert
+    expect(result.status).toBe("INELIGIBLE");
+  });
+
+  it("allows PENDING -> ELIGIBLE", async () => {
+    // Arrange
+    mockedRegistrationRepo.findById.mockResolvedValue({
+      ...baseRegistration,
+      status: "PENDING",
+    } as never);
+    mockedRegistrationRepo.updateStatus.mockResolvedValue({
+      ...baseRegistration,
+      status: "ELIGIBLE",
+    } as never);
+
+    // Act
+    const result = await registrationService.updateStatus(1, "ELIGIBLE");
+
+    // Assert
+    expect(result.status).toBe("ELIGIBLE");
+  });
+
+  it("rejects reviving a WITHDRAWN registration (terminal state)", async () => {
+    // Arrange
+    mockedRegistrationRepo.findById.mockResolvedValue({
+      ...baseRegistration,
+      status: "WITHDRAWN",
+    } as never);
+
+    // Act / Assert
+    await expect(registrationService.updateStatus(1, "ELIGIBLE")).rejects.toMatchObject({
+      statusCode: 409,
+    });
+    expect(mockedRegistrationRepo.updateStatus).not.toHaveBeenCalled();
+  });
+
+  it("rejects reviving an INELIGIBLE registration (terminal state)", async () => {
+    // Arrange
+    mockedRegistrationRepo.findById.mockResolvedValue({
+      ...baseRegistration,
+      status: "INELIGIBLE",
+    } as never);
+
+    // Act / Assert
+    await expect(registrationService.updateStatus(1, "ELIGIBLE")).rejects.toMatchObject({
+      statusCode: 409,
+    });
+  });
+
+  it("does not run the transition check when status is unchanged", async () => {
+    // Arrange
+    mockedRegistrationRepo.findById.mockResolvedValue(baseRegistration as never);
+    mockedRegistrationRepo.updateStatus.mockResolvedValue(baseRegistration as never);
+
+    // Act / Assert — re-sending the same status is an idempotent no-op,
+    // not a (disallowed) transition.
+    await expect(registrationService.updateStatus(1, "ELIGIBLE")).resolves.toBeDefined();
+  });
+});

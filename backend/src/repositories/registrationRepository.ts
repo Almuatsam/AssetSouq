@@ -1,4 +1,4 @@
-import type { Prisma, Registration } from "@prisma/client";
+import type { Prisma, Registration, RegistrationStatus } from "@prisma/client";
 
 import { prisma } from "../config/prisma";
 
@@ -21,6 +21,31 @@ export interface RegistrationWithDevice extends Registration {
     price: unknown;
     status: string;
   };
+}
+
+export interface RegistrationAdminRow extends Registration {
+  employee: {
+    id: number;
+    staffNumber: string;
+    name: string;
+    department: string;
+  };
+  device: {
+    id: number;
+    assetTag: string;
+    deviceType: string;
+    brand: string;
+    model: string;
+    price: unknown;
+    status: string;
+  };
+}
+
+export interface RegistrationListFilters {
+  status?: RegistrationStatus;
+  deviceId?: number;
+  employeeId?: number;
+  search?: string;
 }
 
 export const registrationRepository = {
@@ -68,5 +93,52 @@ export const registrationRepository = {
         },
       },
     });
+  },
+
+  // Admin-only surface (see routes/adminRegistrationRoutes.ts) — every
+  // registration regardless of status, with employee and device context
+  // an admin needs to make sense of the list.
+  findById(id: number): Promise<Registration | null> {
+    return prisma.registration.findUnique({ where: { id } });
+  },
+
+  findAllForAdmin(filters: RegistrationListFilters): Promise<RegistrationAdminRow[]> {
+    return prisma.registration.findMany({
+      where: {
+        status: filters.status,
+        deviceId: filters.deviceId,
+        employeeId: filters.employeeId,
+        // Prisma ignores an `undefined` OR entirely, so this only narrows
+        // the query when a search term was actually given.
+        ...(filters.search
+          ? {
+              OR: [
+                { employee: { name: { contains: filters.search } } },
+                { employee: { staffNumber: { contains: filters.search } } },
+                { device: { assetTag: { contains: filters.search } } },
+              ],
+            }
+          : {}),
+      },
+      orderBy: { submittedAt: "desc" },
+      include: {
+        employee: { select: { id: true, staffNumber: true, name: true, department: true } },
+        device: {
+          select: {
+            id: true,
+            assetTag: true,
+            deviceType: true,
+            brand: true,
+            model: true,
+            price: true,
+            status: true,
+          },
+        },
+      },
+    });
+  },
+
+  updateStatus(id: number, status: RegistrationStatus): Promise<Registration> {
+    return prisma.registration.update({ where: { id }, data: { status } });
   },
 };
