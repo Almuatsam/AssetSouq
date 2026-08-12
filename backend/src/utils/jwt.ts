@@ -3,6 +3,19 @@ import jwt, { type SignOptions } from "jsonwebtoken";
 import { env } from "../config/env";
 import type { AuthUser } from "../types/express";
 
+// No server-side revocation exists for tokens issued here — there is no
+// blocklist, no refresh-token rotation, and no `/auth/logout` endpoint;
+// "logging out" (frontend/src/store/AuthContext.tsx) only clears the
+// token client-side. A copied/exfiltrated token, or one left behind on a
+// shared machine, stays fully valid until it naturally expires
+// (JWT_EXPIRES_IN, 8h by default). This matters more than it would for a
+// typical session because employee login has no password at all (see
+// authService.ts's loginEmployee — staff-ID-only, already an accepted
+// MVP tradeoff) — the token is the *sole* proof of identity for that
+// role. Accepted for this phase alongside the other auth tradeoffs
+// already documented in authStorage.ts and authService.ts; if this needs
+// closing later, the standard fixes are a short-TTL access token + a
+// refresh token, or a minimal revocation list keyed by a token `jti`.
 export type TokenPayload = AuthUser;
 
 // Pin the algorithm on both sign and verify. Defense-in-depth against
