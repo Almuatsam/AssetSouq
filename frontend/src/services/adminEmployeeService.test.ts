@@ -153,3 +153,35 @@ describe("adminEmployeeService.update", () => {
     await expect(adminEmployeeService.update(1, { department: "Finance" })).rejects.toThrow(/went wrong/i);
   });
 });
+
+describe("adminEmployeeService.importFile", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("uploads the file as multipart form data and returns the summary", async () => {
+    // Arrange
+    mockedPost.mockResolvedValue({
+      data: { success: true, data: { summary: { created: 2, updated: 1, errors: [] } } },
+    });
+    const file = new File(["staff number,name"], "employees.xlsx", {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    // Act
+    const result = await adminEmployeeService.importFile(file);
+
+    // Assert
+    expect(result).toEqual({ created: 2, updated: 1, errors: [] });
+    expect(mockedPost).toHaveBeenCalledWith("/admin/employees/import", expect.any(FormData));
+    const sentFormData = mockedPost.mock.calls[0][1] as FormData;
+    expect(sentFormData.get("file")).toBe(file);
+  });
+
+  it("normalizes a failed request into a user-facing error", async () => {
+    // Arrange
+    mockedPost.mockRejectedValue(new Error("boom"));
+    const file = new File(["x"], "employees.xlsx");
+
+    // Act / Assert
+    await expect(adminEmployeeService.importFile(file)).rejects.toThrow(/went wrong/i);
+  });
+});

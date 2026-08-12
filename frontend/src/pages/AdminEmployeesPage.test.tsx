@@ -13,6 +13,7 @@ vi.mock("@/services/adminEmployeeService");
 const mockedAdminEmployeeService = adminEmployeeService as unknown as {
   listAll: ReturnType<typeof vi.fn>;
   update: ReturnType<typeof vi.fn>;
+  importFile: ReturnType<typeof vi.fn>;
 };
 
 const adminSession = {
@@ -221,6 +222,99 @@ describe("AdminEmployeesPage", () => {
 
       // Cleanup
       resolveUpdate({ ...activeEmployee, active: false });
+    });
+  });
+
+  describe("bulk import", () => {
+    function importFile() {
+      return new File(["staff number,name"], "employees.xlsx", {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+    }
+
+    it("disables the Import button until a file is selected", async () => {
+      // Act
+      renderWithProviders(<AdminEmployeesPage />);
+      await screen.findByText(/no employees found/i);
+
+      // Assert
+      expect(screen.getByRole("button", { name: /^import$/i })).toBeDisabled();
+    });
+
+    it("imports the selected file and shows the created/updated summary", async () => {
+      // Arrange
+      mockedAdminEmployeeService.importFile.mockResolvedValue({ created: 2, updated: 1, errors: [] });
+      const user = userEvent.setup();
+      renderWithProviders(<AdminEmployeesPage />);
+      await screen.findByText(/no employees found/i);
+
+      // Act
+      await user.upload(screen.getByLabelText(/bulk import/i), importFile());
+      await user.click(screen.getByRole("button", { name: /^import$/i }));
+
+      // Assert
+      expect(mockedAdminEmployeeService.importFile).toHaveBeenCalledWith(expect.any(File));
+      expect(await screen.findByRole("status")).toHaveTextContent("2 created, 1 updated.");
+    });
+
+    it("lists per-row errors alongside the summary", async () => {
+      // Arrange
+      mockedAdminEmployeeService.importFile.mockResolvedValue({
+        created: 1,
+        updated: 0,
+        errors: [{ row: 3, message: "Invalid email address" }],
+      });
+      const user = userEvent.setup();
+      renderWithProviders(<AdminEmployeesPage />);
+      await screen.findByText(/no employees found/i);
+
+      // Act
+      await user.upload(screen.getByLabelText(/bulk import/i), importFile());
+      await user.click(screen.getByRole("button", { name: /^import$/i }));
+
+      // Assert
+      expect(await screen.findByText(/row 3: invalid email address/i)).toBeInTheDocument();
+    });
+
+    it("shows an error message when the import request itself fails", async () => {
+      // Arrange
+      mockedAdminEmployeeService.importFile.mockRejectedValue(
+        new Error("Missing required column(s): email"),
+      );
+      const user = userEvent.setup();
+      renderWithProviders(<AdminEmployeesPage />);
+      await screen.findByText(/no employees found/i);
+
+      // Act
+      await user.upload(screen.getByLabelText(/bulk import/i), importFile());
+      await user.click(screen.getByRole("button", { name: /^import$/i }));
+
+      // Assert
+      expect(await screen.findByRole("alert")).toHaveTextContent("Missing required column(s): email");
+    });
+
+    it("disables the Import button while the import is in flight", async () => {
+      // Arrange
+      let resolveImport!: (value: { created: number; updated: number; errors: never[] }) => void;
+      mockedAdminEmployeeService.importFile.mockReturnValue(
+        new Promise((resolve) => {
+          resolveImport = resolve;
+        }),
+      );
+      const user = userEvent.setup();
+      renderWithProviders(<AdminEmployeesPage />);
+      await screen.findByText(/no employees found/i);
+      await user.upload(screen.getByLabelText(/bulk import/i), importFile());
+      const importButton = screen.getByRole("button", { name: /^import$/i });
+
+      // Act
+      await user.click(importButton);
+
+      // Assert
+      expect(importButton).toBeDisabled();
+
+      // Cleanup
+      resolveImport({ created: 1, updated: 0, errors: [] });
     });
   });
 });

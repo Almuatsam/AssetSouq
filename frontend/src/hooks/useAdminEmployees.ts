@@ -36,3 +36,15 @@ export function useUpdateEmployee() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ADMIN_EMPLOYEES_QUERY_KEY }),
   });
 }
+
+export function useImportEmployees() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => adminEmployeeService.importFile(file),
+    // Invalidated even though some/all rows may have errored — a partial
+    // import (see EmployeeImportSummary's created/updated counts) still
+    // changed real data, so the list must not go stale just because the
+    // file wasn't 100% clean.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ADMIN_EMPLOYEES_QUERY_KEY }),
+  });
+}

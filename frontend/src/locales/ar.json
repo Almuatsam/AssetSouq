@@ -67,6 +67,8 @@
     "manageEmployees": "إدارة الموظفين",
     "manageRegistrations": "إدارة التسجيلات",
     "viewWinners": "عرض الفائزين",
+    "viewReports": "التقارير",
+    "viewAuditLog": "سجل التدقيق",
     "statsLoadError": "تعذر تحميل إحصائيات لوحة التحكم. حاول مرة أخرى.",
     "totalDevices": "إجمالي الأجهزة",
     "totalEmployees": "إجمالي الموظفين",
@@ -154,7 +156,13 @@
     "activate": "تفعيل",
     "confirmDeactivate": "إلغاء تفعيل هذا الموظف؟ لن يعد مؤهلاً للسحب.",
     "confirmActivate": "إعادة تفعيل هذا الموظف؟",
-    "actionError": "تعذر إتمام هذا الإجراء. حاول مرة أخرى."
+    "actionError": "تعذر إتمام هذا الإجراء. حاول مرة أخرى.",
+    "importTitle": "استيراد جماعي",
+    "importDescription": "قم بتحميل ملف .xlsx يحتوي على أعمدة الرقم الوظيفي والاسم والقسم والبريد الإلكتروني لإنشاء أو تحديث الموظفين بشكل جماعي.",
+    "import": "استيراد",
+    "importError": "تعذر استيراد هذا الملف. حاول مرة أخرى.",
+    "importSummary": "تم إنشاء {{created}}، وتحديث {{updated}}.",
+    "importRowError": "الصف {{row}}: {{message}}"
   },
   "adminEmployeeForm": {
     "createTitle": "إضافة موظف",
@@ -238,5 +246,33 @@
     },
     "actionError": "تعذر إتمام هذا الإجراء. حاول مرة أخرى.",
     "handedOverOn": "تم التسليم في {{date}}"
+  },
+  "adminReports": {
+    "title": "التقارير",
+    "subtitle": "تصدير البيانات الحالية كملف إكسل.",
+    "download": "تنزيل",
+    "downloadError": "تعذر تنزيل هذا التقرير. حاول مرة أخرى.",
+    "devicesTitle": "تقرير الأجهزة",
+    "devicesDescription": "جميع الأجهزة وحالتها الحالية.",
+    "employeesTitle": "تقرير الموظفين",
+    "employeesDescription": "جميع الموظفين وأهليتهم.",
+    "registrationsTitle": "تقرير التسجيلات",
+    "registrationsDescription": "جميع تسجيلات الاهتمام المقدمة.",
+    "winnersTitle": "تقرير الفائزين",
+    "winnersDescription": "جميع الفائزين وحالة الدفع والتسليم."
+  },
+  "adminAuditLog": {
+    "title": "سجل التدقيق",
+    "subtitle": "سجل بإجراءات المسؤولين مثل إعادة السحب.",
+    "filterLabel": "تصفية حسب الكيان",
+    "filterPlaceholder": "مثال: Winner",
+    "empty": "لا توجد سجلات تدقيق بعد.",
+    "loadError": "تعذر تحميل سجل التدقيق. حاول مرة أخرى.",
+    "timestamp": "الوقت",
+    "admin": "المسؤول",
+    "action": "الإجراء",
+    "entity": "الكيان",
+    "entityId": "معرف الكيان",
+    "unknownAdmin": "غير معروف"
   }
 }

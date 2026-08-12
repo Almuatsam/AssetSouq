@@ -40,3 +40,15 @@ export interface EmployeeListFilters {
   department?: string;
   search?: string;
 }
+
+// Mirrors backend/src/services/employeeImportService.ts's EmployeeImportSummary.
+export interface EmployeeImportRowError {
+  row: number;
+  message: string;
+}
+
+export interface EmployeeImportSummary {
+  created: number;
+  updated: number;
+  errors: EmployeeImportRowError[];
+}

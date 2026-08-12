@@ -67,6 +67,8 @@
     "manageEmployees": "Manage Employees",
     "manageRegistrations": "Manage Registrations",
     "viewWinners": "View Winners",
+    "viewReports": "Reports",
+    "viewAuditLog": "Audit Log",
     "statsLoadError": "Couldn't load dashboard stats. Please try again.",
     "totalDevices": "Total Devices",
     "totalEmployees": "Total Employees",
@@ -154,7 +156,13 @@
     "activate": "Activate",
     "confirmDeactivate": "Deactivate this employee? They will no longer be eligible for the raffle.",
     "confirmActivate": "Reactivate this employee?",
-    "actionError": "Couldn't complete that action. Please try again."
+    "actionError": "Couldn't complete that action. Please try again.",
+    "importTitle": "Bulk Import",
+    "importDescription": "Upload an .xlsx file with Staff Number, Name, Department, and Email columns to create or update employees in bulk.",
+    "import": "Import",
+    "importError": "Couldn't import that file. Please try again.",
+    "importSummary": "{{created}} created, {{updated}} updated.",
+    "importRowError": "Row {{row}}: {{message}}"
   },
   "adminEmployeeForm": {
     "createTitle": "Add Employee",
@@ -238,5 +246,33 @@
     },
     "actionError": "Couldn't complete that action. Please try again.",
     "handedOverOn": "Handed over on {{date}}"
+  },
+  "adminReports": {
+    "title": "Reports",
+    "subtitle": "Export the current data as an Excel workbook.",
+    "download": "Download",
+    "downloadError": "Couldn't download that report. Please try again.",
+    "devicesTitle": "Devices Report",
+    "devicesDescription": "Every device and its current status.",
+    "employeesTitle": "Employees Report",
+    "employeesDescription": "Every employee and their eligibility.",
+    "registrationsTitle": "Registrations Report",
+    "registrationsDescription": "Every registration of interest submitted.",
+    "winnersTitle": "Winners Report",
+    "winnersDescription": "Every winner, payment status, and handover."
+  },
+  "adminAuditLog": {
+    "title": "Audit Log",
+    "subtitle": "A record of admin actions such as redraws.",
+    "filterLabel": "Filter by Entity",
+    "filterPlaceholder": "e.g. Winner",
+    "empty": "No audit log entries yet.",
+    "loadError": "Couldn't load the audit log. Please try again.",
+    "timestamp": "Timestamp",
+    "admin": "Admin",
+    "action": "Action",
+    "entity": "Entity",
+    "entityId": "Entity ID",
+    "unknownAdmin": "Unknown"
   }
 }

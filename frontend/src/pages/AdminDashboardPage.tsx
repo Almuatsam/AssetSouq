@@ -60,6 +60,12 @@ export default function AdminDashboardPage() {
           <Link to="/admin/winners" className="font-medium text-primary hover:underline">
             {t("adminDashboard.viewWinners")}
           </Link>
+          <Link to="/admin/reports" className="font-medium text-primary hover:underline">
+            {t("adminDashboard.viewReports")}
+          </Link>
+          <Link to="/admin/audit-log" className="font-medium text-primary hover:underline">
+            {t("adminDashboard.viewAuditLog")}
+          </Link>
         </Card>
 
         {stats ? (

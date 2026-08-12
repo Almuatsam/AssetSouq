@@ -4,6 +4,7 @@ import type { ApiEnvelope } from "@/types/auth";
 import type {
   CreateEmployeeInput,
   Employee,
+  EmployeeImportSummary,
   EmployeeListFilters,
   UpdateEmployeeInput,
 } from "@/types/employee";
@@ -45,6 +46,20 @@ export const adminEmployeeService = {
         data,
       );
       return res.data.data!.employee;
+    } catch (err) {
+      throw toUserFacingError(err);
+    }
+  },
+
+  async importFile(file: File): Promise<EmployeeImportSummary> {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await apiClient.post<ApiEnvelope<{ summary: EmployeeImportSummary }>>(
+        "/admin/employees/import",
+        formData,
+      );
+      return res.data.data!.summary;
     } catch (err) {
       throw toUserFacingError(err);
     }
