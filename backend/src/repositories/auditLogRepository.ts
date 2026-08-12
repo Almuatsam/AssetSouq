@@ -11,6 +11,21 @@ export interface CreateAuditLogData {
   entityId: number;
 }
 
+export interface AuditLogListFilters {
+  entity?: string;
+  adminId?: number;
+}
+
+export interface AuditLogWithAdmin extends AuditLog {
+  admin: { id: number; username: string } | null;
+}
+
+// Caps the admin-facing list endpoint so a growing audit trail can never
+// turn one GET into an unbounded table scan/response — this is a live
+// operational view of recent activity, not a full-history export (there
+// is no such export requirement for AuditLog in docs/01-PRD.md).
+const MAX_LIST_ROWS = 500;
+
 export const auditLogRepository = {
   // docs/03-App-Flow.md's "Draw Flow (detail)" step 6: a redraw "logs the
   // redraw as a new AuditLog entry" — the original draw's own audit trail
@@ -21,5 +36,15 @@ export const auditLogRepository = {
   // row's redrawReason — this is that record.
   create(data: CreateAuditLogData, db: Db = prisma): Promise<AuditLog> {
     return db.auditLog.create({ data });
+  },
+
+  // Admin-only surface (see routes/adminAuditLogRoutes.ts).
+  findAll(filters: AuditLogListFilters): Promise<AuditLogWithAdmin[]> {
+    return prisma.auditLog.findMany({
+      where: { entity: filters.entity, adminId: filters.adminId },
+      orderBy: { timestamp: "desc" },
+      take: MAX_LIST_ROWS,
+      include: { admin: { select: { id: true, username: true } } },
+    });
   },
 };

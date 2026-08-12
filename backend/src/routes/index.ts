@@ -1,10 +1,12 @@
 import { Router } from "express";
 
+import { adminAuditLogRouter } from "./adminAuditLogRoutes";
 import { adminDashboardRouter } from "./adminDashboardRoutes";
 import { adminDeviceRouter } from "./adminDeviceRoutes";
 import { adminDrawRouter } from "./adminDrawRoutes";
 import { adminEmployeeRouter } from "./adminEmployeeRoutes";
 import { adminRegistrationRouter } from "./adminRegistrationRoutes";
+import { adminReportRouter } from "./adminReportRoutes";
 import { adminWinnerRouter } from "./adminWinnerRoutes";
 import { authRouter } from "./authRoutes";
 import { deviceRouter } from "./deviceRoutes";
@@ -25,8 +27,7 @@ router.use("/admin/registrations", adminRegistrationRouter);
 router.use("/admin/dashboard", adminDashboardRouter);
 router.use("/admin/draws", adminDrawRouter);
 router.use("/admin/winners", adminWinnerRouter);
-
-// Remaining feature routers are mounted here as they're implemented, e.g.:
-// router.use("/reports", reportRouter);
+router.use("/admin/reports", adminReportRouter);
+router.use("/admin/audit-logs", adminAuditLogRouter);
 
 export { router };

@@ -75,9 +75,26 @@ export const adminDrawWriteRateLimiter = createUserKeyedRateLimiter(10);
 
 export const adminWinnerReadRateLimiter = createUserKeyedRateLimiter(120);
 
+// Read-only audit trail browsing — same generous ceiling as the other
+// admin list endpoints.
+export const adminAuditLogReadRateLimiter = createUserKeyedRateLimiter(120);
+
 // Recording a payment/handover is routine admin bookkeeping — same
 // budget as the other resources' write limiters.
 export const adminWinnerWriteRateLimiter = createUserKeyedRateLimiter(60);
+
+// Report generation reads and serializes an entire table into a workbook
+// on every request — meaningfully heavier than a plain list endpoint, so
+// this gets its own tighter budget rather than sharing one of the
+// adminXReadRateLimiter instances above.
+export const adminReportReadRateLimiter = createUserKeyedRateLimiter(20);
+
+// Bulk employee import — a rare, deliberate operation (an HR export
+// dropped in occasionally), and each request does a full read-modify-
+// write pass over every row in the uploaded file. Same tight budget as
+// the draw-write limiter above, for the same reason: no legitimate case
+// needs many of these in one 15-minute window.
+export const adminEmployeeImportRateLimiter = createUserKeyedRateLimiter(10);
 
 // Read-only, no side effects — a generous ceiling just to stop naive
 // scripted abuse, not to bound legitimate browsing.

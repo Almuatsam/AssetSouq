@@ -2,12 +2,17 @@ import request from "supertest";
 
 import { createApp } from "../src/app";
 import { AppError } from "../src/middlewares/errorHandler";
+import { employeeImportService } from "../src/services/employeeImportService";
 import { employeeService } from "../src/services/employeeService";
 import { signToken } from "../src/utils/jwt";
 
 jest.mock("../src/services/employeeService");
+jest.mock("../src/services/employeeImportService");
 
 const mockedEmployeeService = employeeService as jest.Mocked<typeof employeeService>;
+const mockedEmployeeImportService = employeeImportService as jest.Mocked<typeof employeeImportService>;
+
+const XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 const app = createApp();
 
@@ -302,5 +307,110 @@ describe("PATCH /api/admin/employees/:id", () => {
 
     // Assert
     expect(res.status).toBe(409);
+  });
+});
+
+describe("POST /api/admin/employees/import", () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it("requires authentication", async () => {
+    // Act
+    const res = await request(app)
+      .post("/api/admin/employees/import")
+      .attach("file", Buffer.from("fake"), { filename: "employees.xlsx", contentType: XLSX_CONTENT_TYPE });
+
+    // Assert
+    expect(res.status).toBe(401);
+  });
+
+  it("is not available to employees", async () => {
+    // Act
+    const res = await request(app)
+      .post("/api/admin/employees/import")
+      .set("Authorization", `Bearer ${employeeToken}`)
+      .attach("file", Buffer.from("fake"), { filename: "employees.xlsx", contentType: XLSX_CONTENT_TYPE });
+
+    // Assert
+    expect(res.status).toBe(403);
+  });
+
+  it("imports the file and returns the summary for an authenticated admin", async () => {
+    // Arrange
+    mockedEmployeeImportService.importEmployees.mockResolvedValue({
+      created: 2,
+      updated: 1,
+      errors: [{ row: 4, message: "Invalid email address" }],
+    });
+
+    // Act
+    const res = await request(app)
+      .post("/api/admin/employees/import")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .attach("file", Buffer.from("fake"), { filename: "employees.xlsx", contentType: XLSX_CONTENT_TYPE });
+
+    // Assert
+    expect(res.status).toBe(200);
+    expect(res.body.data.summary).toEqual({
+      created: 2,
+      updated: 1,
+      errors: [{ row: 4, message: "Invalid email address" }],
+    });
+    expect(mockedEmployeeImportService.importEmployees).toHaveBeenCalledWith(expect.any(Buffer));
+  });
+
+  it("returns 400 when no file is attached", async () => {
+    // Act
+    const res = await request(app)
+      .post("/api/admin/employees/import")
+      .set("Authorization", `Bearer ${adminToken}`);
+
+    // Assert
+    expect(res.status).toBe(400);
+    expect(mockedEmployeeImportService.importEmployees).not.toHaveBeenCalled();
+  });
+
+  it("rejects a file over the 5MB size limit with a 400 (multer.MulterError path)", async () => {
+    // Arrange — over middlewares/upload.ts's 5MB limit; content doesn't
+    // matter, only size, since multer rejects it before the body is ever
+    // handed to the controller/service.
+    const oversized = Buffer.alloc(6 * 1024 * 1024);
+
+    // Act
+    const res = await request(app)
+      .post("/api/admin/employees/import")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .attach("file", oversized, { filename: "employees.xlsx", contentType: XLSX_CONTENT_TYPE });
+
+    // Assert
+    expect(res.status).toBe(400);
+    expect(mockedEmployeeImportService.importEmployees).not.toHaveBeenCalled();
+  });
+
+  it("rejects a non-.xlsx file", async () => {
+    // Act
+    const res = await request(app)
+      .post("/api/admin/employees/import")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .attach("file", Buffer.from("not an xlsx"), { filename: "employees.txt", contentType: "text/plain" });
+
+    // Assert
+    expect(res.status).toBe(400);
+    expect(mockedEmployeeImportService.importEmployees).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when the workbook is malformed", async () => {
+    // Arrange
+    mockedEmployeeImportService.importEmployees.mockRejectedValue(
+      new AppError(400, "Missing required column(s): email"),
+    );
+
+    // Act
+    const res = await request(app)
+      .post("/api/admin/employees/import")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .attach("file", Buffer.from("fake"), { filename: "employees.xlsx", contentType: XLSX_CONTENT_TYPE });
+
+    // Assert
+    expect(res.status).toBe(400);
   });
 });

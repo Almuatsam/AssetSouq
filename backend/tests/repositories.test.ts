@@ -40,7 +40,7 @@ jest.mock("../src/config/prisma", () => ({
     },
     draw: { create: jest.fn(), findUnique: jest.fn() },
     winner: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), findFirst: jest.fn(), update: jest.fn() },
-    auditLog: { create: jest.fn() },
+    auditLog: { create: jest.fn(), findMany: jest.fn() },
   },
 }));
 
@@ -76,7 +76,7 @@ const mockedPrisma = prisma as unknown as {
     findFirst: jest.Mock;
     update: jest.Mock;
   };
-  auditLog: { create: jest.Mock };
+  auditLog: { create: jest.Mock; findMany: jest.Mock };
 };
 
 beforeEach(() => jest.clearAllMocks());
@@ -766,5 +766,28 @@ describe("auditLogRepository", () => {
     // Assert
     expect((tx as { auditLog: { create: jest.Mock } }).auditLog.create).toHaveBeenCalledWith({ data });
     expect(mockedPrisma.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it("findAll() lists audit logs ordered newest-first, joined with the acting admin", async () => {
+    // Act
+    await auditLogRepository.findAll({});
+
+    // Assert
+    expect(mockedPrisma.auditLog.findMany).toHaveBeenCalledWith({
+      where: { entity: undefined, adminId: undefined },
+      orderBy: { timestamp: "desc" },
+      take: 500,
+      include: { admin: { select: { id: true, username: true } } },
+    });
+  });
+
+  it("findAll() narrows by entity and adminId when given", async () => {
+    // Act
+    await auditLogRepository.findAll({ entity: "Winner", adminId: 1 });
+
+    // Assert
+    expect(mockedPrisma.auditLog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { entity: "Winner", adminId: 1 } }),
+    );
   });
 });
