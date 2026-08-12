@@ -54,12 +54,14 @@ rely on that same lucky escape twice.
 ```bash
 git clone <this repo> assetsouq && cd assetsouq
 cp .env.production.example .env.production
-# Fill in every value in .env.production — especially MYSQL_ROOT_PASSWORD,
-# MYSQL_PASSWORD, JWT_SECRET (generate with `openssl rand -base64 48`),
-# DOMAIN, and TRUST_PROXY (see that file's own comments — TRUST_PROXY=2
-# is correct for this exact stack's two reverse-proxy hops; get this
-# wrong and the login rate limiter either collapses every visitor into
-# one shared bucket or becomes bypassable via a spoofed header).
+# Fill in every value in .env.production — especially MYSQL_ROOT_PASSWORD
+# and MYSQL_PASSWORD (generate with `openssl rand -hex 24`, not -base64 —
+# see that file's own comment on why), JWT_SECRET (`openssl rand -base64
+# 48` is fine here, it's never embedded in a URI), DOMAIN, and
+# TRUST_PROXY (see that file's own comments — TRUST_PROXY=2 is correct
+# for this exact stack's two reverse-proxy hops; get this wrong and the
+# login rate limiter either collapses every visitor into one shared
+# bucket or becomes bypassable via a spoofed header).
 
 # Start the database first, on its own, so the next step has something
 # to migrate against.
@@ -119,7 +121,7 @@ non-default value before real traffic:
 | `TRUST_PROXY` | Must equal the reverse-proxy hop count (`2` for this exact Caddy→nginx→backend stack) — see the warning in `backend/src/config/env.ts`. |
 | `CORS_ORIGIN` | Deliberately unset in `.env.production.example` — `frontend/nginx.conf` reverse-proxies `/api` same-origin, so no cross-origin request (and therefore no CORS config) is ever involved in this topology. Only set it if the backend is ever deployed separately from that `nginx.conf`. |
 | `JWT_SECRET` | Generate a real random value (`openssl rand -base64 48`); never reuse `backend/.env.example`'s dev placeholder. No rotation mechanism exists yet — rotating it invalidates every currently-issued token, which is otherwise fine (see the "no token revocation" note below). |
-| `MYSQL_ROOT_PASSWORD` / `MYSQL_PASSWORD` | Real random values (`openssl rand -base64 24`); these end up in `.env.production`, which must never be committed (it's `.gitignore`d, but double-check before ever changing that file). |
+| `MYSQL_ROOT_PASSWORD` / `MYSQL_PASSWORD` | Real random values — `openssl rand -hex 24`, not `-base64` (see "Troubleshooting" below for why `MYSQL_PASSWORD` specifically needs to stay URL-safe). These end up in `.env.production`, which must never be committed (it's `.gitignore`d, but double-check before ever changing that file). |
 
 ### Known, accepted tradeoffs carried into production
 
@@ -197,3 +199,27 @@ generates new ones. Generate new migrations locally during development
 (`npm run prisma:migrate`, i.e. `prisma migrate dev`, against your local
 dev database), commit the resulting `migrations/` directory, then deploy
 and run the `migrate` step above as part of the redeploy process.
+
+## Troubleshooting
+
+Two real issues hit while validating this guide end-to-end, kept here
+since they're easy to hit again:
+
+- **`https://<domain>/` refuses to connect at all.** Almost always means
+  the stack (or at least the `caddy` service) was never actually started
+  — check `docker compose --env-file .env.production -f
+  docker-compose.prod.yml ps` first; if a service is missing entirely
+  rather than unhealthy, the `up -d` step either wasn't run yet or
+  errored partway through (scroll up in its output, or check `docker
+  compose ... logs caddy`).
+- **`migrate` fails with `P1013: invalid port number in database URL`**,
+  even though `DATABASE_URL` "looks" fine. `DATABASE_URL` is a real URI —
+  a `MYSQL_PASSWORD` generated with `openssl rand -base64` (or any
+  base64 generator) can contain a `/`, which Prisma's URL parser reads as
+  a path separator instead of part of the password, corrupting
+  everything after it including the port. Use `openssl rand -hex 24`
+  (or the Node one-liner in `.env.production.example`) instead — hex
+  output has no characters that need escaping in a URI. If you're stuck
+  with a password that does contain `/`, `@`, or `:`, percent-encode
+  just those characters in `DATABASE_URL` itself (`/` → `%2F`, etc.) —
+  leave the plain `MYSQL_PASSWORD` value un-encoded, that one isn't a URI.
