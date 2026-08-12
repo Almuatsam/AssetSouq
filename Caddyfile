@@ -1,0 +1,17 @@
+# TLS termination + reverse proxy in front of the frontend container.
+# See docs/07-Deployment.md. {$DOMAIN} comes from .env.production (used
+# via docker-compose.prod.yml's env_file) — pointing this at a real,
+# publicly-resolvable domain gets Caddy to automatically request and
+# renew a Let's Encrypt certificate; a bare IP or "localhost" falls back
+# to a self-signed one instead.
+{$DOMAIN} {
+	reverse_proxy frontend:80
+
+	encode gzip
+
+	# Caddy already terminates TLS and sets its own standard security
+	# headers; this adds HSTS specifically, which Caddy doesn't enable by
+	# default (a wrong HSTS header is hard to walk back once a browser has
+	# cached it, so it's opt-in tooling-wide, not just here).
+	header Strict-Transport-Security "max-age=31536000; includeSubDomains"
+}

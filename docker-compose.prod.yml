@@ -1,0 +1,105 @@
+# Self-hosted production stack: Caddy (TLS termination + reverse proxy)
+# -> frontend (nginx, serves the built SPA + proxies /api to backend)
+# -> backend (Node/Express) -> MySQL.
+#
+# NOT used for local dev — see docker-compose.yml (a throwaway MySQL
+# container only) and README.md's "Getting Started" section for that.
+#
+# `name:` below is load-bearing, not cosmetic — without an explicit
+# project name, Compose derives one from the current directory, which
+# would be identical to docker-compose.yml's (same directory, also no
+# override). Since Compose tracks "does a container for this service
+# already exist" by (project name, service name) — not by
+# `container_name` — and both files happen to define a `mysql` service,
+# an unnamed project here would make Compose treat the two files'
+# entirely separate `mysql` services as the *same* one, `up`/`stop`/`rm`
+# operations on this file silently adopting, recreating, or removing the
+# dev database's container. (Confirmed the hard way once — recovered
+# with no data loss only because MySQL's entrypoint leaves an existing,
+# non-empty data directory alone on restart. Do not remove this line.)
+name: assetsouq-prod
+
+# Usage — see docs/07-Deployment.md for the full guide:
+#   cp .env.production.example .env.production   # fill in real values
+#   docker compose --env-file .env.production -f docker-compose.prod.yml \
+#     run --rm migrate                             # apply migrations once
+#   docker compose --env-file .env.production -f docker-compose.prod.yml \
+#     up -d                                         # start the stack
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-assetsouq}
+      MYSQL_USER: ${MYSQL_USER:-assetsouq}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - assetsouq_prod_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # No published port — only other containers on this stack's network
+    # need to reach it, never the host or internet.
+
+  backend:
+    build:
+      context: ./backend
+      target: runtime
+    restart: unless-stopped
+    env_file: .env.production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    # No published port — only the frontend container's nginx proxy
+    # reaches it (frontend/nginx.conf); never exposed directly.
+
+  # A one-off job, not a long-running service — deliberately excluded
+  # from the default `docker compose up` via the "tools" profile, so
+  # applying a schema migration stays a distinct, deliberate step
+  # (docs/07-Deployment.md) rather than something that silently reruns
+  # on every restart or races itself if this stack is ever scaled to
+  # multiple backend replicas. Built from the `build` stage, not
+  # `runtime` — that's the one that still has the `prisma` CLI in it.
+  migrate:
+    build:
+      context: ./backend
+      target: build
+    env_file: .env.production
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: ["npx", "prisma", "migrate", "deploy"]
+    profiles: ["tools"]
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    # No published port — only Caddy is reachable from outside this
+    # stack; see that service below.
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - assetsouq_caddy_data:/data
+      - assetsouq_caddy_config:/config
+    depends_on:
+      - frontend
+
+volumes:
+  assetsouq_prod_mysql_data:
+  assetsouq_caddy_data:
+  assetsouq_caddy_config:

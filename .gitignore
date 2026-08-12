@@ -1,10 +1,16 @@
 # Dependencies
 node_modules/
 
-# Env files (never commit real secrets)
-.env
-.env.local
-.env.*.local
+# Env files (never commit real secrets) — every .env* is ignored except
+# the .env*.example files that document required variables. (Broadened
+# from just .env/.env.local/.env.*.local — those three missed
+# .env.production, added for docker-compose.prod.yml, entirely.)
+.env*
+!.env.example
+!backend/.env.example
+!frontend/.env.example
+!e2e/.env.e2e.example
+!.env.production.example
 
 # Build output
 dist/

@@ -14,6 +14,7 @@ See [`docs/`](docs/) for the full planning set:
 - [04-Backend-Schema.md](docs/04-Backend-Schema.md) — data model
 - [05-Design-Brief.md](docs/05-Design-Brief.md) — visual design system
 - [06-Engineering-Plan.md](docs/06-Engineering-Plan.md) — phased build plan
+- [07-Deployment.md](docs/07-Deployment.md) — production deployment guide
 
 ## Stack
 
@@ -90,21 +91,38 @@ npm run test:e2e
 state before every run (see `global-setup.ts`) — no manual setup beyond
 the database/env file above.
 
+### Production deployment
+
+See [docs/07-Deployment.md](docs/07-Deployment.md) for the full guide —
+a self-hosted Docker Compose stack (Caddy + nginx + backend + MySQL),
+backup/restore scripts, and a monitoring/environment reference. **Read
+that doc's Compose project-name warning before ever running
+`docker-compose.prod.yml`** — it isn't optional.
+
 ## Project Structure
 
 ```
 AssetSouq/
-  docs/       planning documents (PRD, TDD, schema, design brief, etc.)
-  backend/    Express + TypeScript + Prisma API
-  frontend/   React + TypeScript + Vite app
-  e2e/        Playwright end-to-end tests (own package, own DB)
+  docs/                     planning + deployment documentation
+  backend/                  Express + TypeScript + Prisma API
+    Dockerfile              production image (multi-stage)
+  frontend/                 React + TypeScript + Vite app
+    Dockerfile              production image (nginx, multi-stage)
+  e2e/                      Playwright end-to-end tests (own package, own DB)
+  scripts/                  backup.sh / restore.sh (see docs/07-Deployment.md)
+  docker-compose.yml        local dev MySQL only
+  docker-compose.prod.yml   production stack (Caddy + nginx + backend + MySQL)
+  Caddyfile                 TLS termination config for the production stack
+  .github/workflows/ci.yml  lint + typecheck + test + Docker build, on every push/PR
 ```
 
 ## Status
 
-Phases 1-5 of [06-Engineering-Plan.md](docs/06-Engineering-Plan.md) are
-built: Foundation, Employee Module, Admin Module, Draw Engine, and
-Reports. Phase 6 (Testing) is in progress — unit/integration coverage is
-enforced per-feature throughout (80%+ on all four metrics, both apps) and
-critical-flow E2E coverage now exists in `e2e/`. Phase 7 (Deployment) is
-not yet started.
+Phases 1-6 of [06-Engineering-Plan.md](docs/06-Engineering-Plan.md) are
+built: Foundation, Employee Module, Admin Module, Draw Engine, Reports,
+and Testing (unit/integration coverage enforced per-feature throughout —
+80%+ on all four metrics, both apps — plus critical-flow E2E, an
+automated accessibility audit, and a whole-system security audit, all in
+`e2e/`). Phase 7 (Deployment) is built and verified end-to-end against a
+real Docker Desktop instance — see
+[docs/07-Deployment.md](docs/07-Deployment.md).
