@@ -4,6 +4,10 @@ module.exports = {
   testEnvironment: "node",
   roots: ["<rootDir>/src", "<rootDir>/tests"],
   testMatch: ["**/*.test.ts"],
+  // Must run before module evaluation (not setupFilesAfterEnv, which runs
+  // after the test framework is set up but still after modules under test
+  // have already been required) — see tests/setupEnv.ts for why.
+  setupFiles: ["<rootDir>/tests/setupEnv.ts"],
   collectCoverageFrom: ["src/**/*.ts", "!src/server.ts"],
   coverageThreshold: {
     global: {

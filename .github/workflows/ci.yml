@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
           cache-dependency-path: backend/package-lock.json
       - run: npm ci
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
@@ -41,9 +41,12 @@ jobs:
       - run: npx tsc -b
       - run: npm run test:coverage
         env:
-          # Node 20's own native localStorage/sessionStorage otherwise
-          # shadows jsdom's implementation in tests — see
-          # vite.config.ts's matching comment.
+          # Node 22+'s own native localStorage/sessionStorage otherwise
+          # shadows jsdom's implementation in tests — see vite.config.ts's
+          # matching comment. This flag doesn't exist before Node 22, so it
+          # must not be applied to a job pinned below that (it errors
+          # instead of being a no-op — confirmed against real Node 20/22/24
+          # binaries, not assumed).
           NODE_OPTIONS: --no-experimental-webstorage
 
   # Builds both production images on every push/PR to catch Dockerfile
