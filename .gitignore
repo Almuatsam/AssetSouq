@@ -36,5 +36,10 @@ Thumbs.db
 # Test coverage
 coverage/
 
+# Playwright (e2e/)
+e2e/test-results/
+e2e/playwright-report/
+e2e/blob-report/
+
 # Claude Code harness-internal state
 .claude/

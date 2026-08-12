@@ -65,6 +65,31 @@ npm install
 npm run dev              # http://localhost:5173
 ```
 
+### E2E tests (Playwright)
+
+Critical-path browser tests live in `e2e/`, entirely separate from the
+`frontend/`/`backend/` unit and integration suites (`npm test` in each).
+They run against a dedicated `assetsouq_e2e` database on the same MySQL
+container as local dev (never touches `assetsouq_dev`) and their own
+backend/frontend instances on ports 4001/5174, so they can run alongside
+an already-running dev environment without a port clash.
+
+```bash
+docker exec assetsouq-mysql-dev mysql -u root -p"$MYSQL_ROOT_PASSWORD" \
+  -e "CREATE DATABASE IF NOT EXISTS assetsouq_e2e;"
+
+cd e2e
+cp .env.e2e.example .env.e2e.local   # fill in real values
+npm install
+npx playwright install chromium
+npm run test:e2e
+```
+
+`npm run test:e2e` starts the backend and frontend for you (Playwright's
+`webServer` config) and resets `assetsouq_e2e` to a clean, freshly-seeded
+state before every run (see `global-setup.ts`) — no manual setup beyond
+the database/env file above.
+
 ## Project Structure
 
 ```
@@ -72,9 +97,14 @@ AssetSouq/
   docs/       planning documents (PRD, TDD, schema, design brief, etc.)
   backend/    Express + TypeScript + Prisma API
   frontend/   React + TypeScript + Vite app
+  e2e/        Playwright end-to-end tests (own package, own DB)
 ```
 
 ## Status
 
-Early scaffold stage — see [06-Engineering-Plan.md](docs/06-Engineering-Plan.md)
-for the phased build order (Phase 1: Foundation is in progress).
+Phases 1-5 of [06-Engineering-Plan.md](docs/06-Engineering-Plan.md) are
+built: Foundation, Employee Module, Admin Module, Draw Engine, and
+Reports. Phase 6 (Testing) is in progress — unit/integration coverage is
+enforced per-feature throughout (80%+ on all four metrics, both apps) and
+critical-flow E2E coverage now exists in `e2e/`. Phase 7 (Deployment) is
+not yet started.
