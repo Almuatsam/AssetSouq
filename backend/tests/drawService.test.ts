@@ -222,7 +222,7 @@ describe("drawService.runDraw", () => {
     );
   });
 
-  it("selects device.quantity winners and creates a Winner row + sets lastWinnerDate for each", async () => {
+  it("selects device.quantity winners and creates a Winner row for each", async () => {
     // Arrange
     mockedDeviceRepo.findById.mockResolvedValue({ ...baseDevice, quantity: 2 } as never);
     mockedRegistrationRepo.findEligibleByDeviceId.mockResolvedValue([
@@ -239,7 +239,6 @@ describe("drawService.runDraw", () => {
 
     // Assert
     expect(mockedDrawRepo.createWinner).toHaveBeenCalledTimes(2);
-    expect(mockedEmployeeRepo.markAsWinner).toHaveBeenCalledTimes(2);
     expect(mockedDrawRepo.createWinner).toHaveBeenCalledWith(
       expect.objectContaining({ employeeId: 10, deviceId: 1, priceDue: baseDevice.price }),
       expect.anything(),
@@ -248,6 +247,28 @@ describe("drawService.runDraw", () => {
       expect.objectContaining({ employeeId: 11 }),
       expect.anything(),
     );
+  });
+
+  // Regression, whole-system audit finding: markAsWinner() (which stamps
+  // employee.lastWinnerDate, the 24-month re-entry cooldown) used to run
+  // here, at draw-time *selection* — before a winner has paid, accepted,
+  // or received anything. That incorrectly started the cooldown even for
+  // a candidate later redrawn away (declined/unpaid/no-show/admin
+  // override), penalizing them for a win they never actually got. It now
+  // only runs from winnerService.recordPayment() once a payment is
+  // actually confirmed — see that test file's matching regression test.
+  it("does not stamp lastWinnerDate at selection time — only payment confirmation does that", async () => {
+    // Arrange
+    mockedDeviceRepo.findById.mockResolvedValue(baseDevice as never);
+    mockedRegistrationRepo.findEligibleByDeviceId.mockResolvedValue([registration(10)]);
+    mockedEmployeeRepo.findById.mockResolvedValue(baseEmployee as never);
+
+    // Act
+    await drawService.runDraw(1, 1);
+
+    // Assert
+    expect(mockedDrawRepo.createWinner).toHaveBeenCalled();
+    expect(mockedEmployeeRepo.markAsWinner).not.toHaveBeenCalled();
   });
 
   it("does not create a Winner row for candidates beyond device.quantity", async () => {
@@ -377,6 +398,12 @@ describe("drawService.redrawWinner", () => {
     mockedDrawRepo.createWinner.mockResolvedValue({ id: 2, employeeId: 11 } as never);
     mockedEmployeeRepo.markAsWinner.mockResolvedValue(baseEmployee as never);
     mockedAuditLogRepo.create.mockResolvedValue({} as never);
+    // jest.clearAllMocks() only clears call history, not implementations
+    // set via .mockResolvedValue() — every dependency needs its own
+    // explicit default here, or a later test can end up silently running
+    // against whatever value an earlier test happened to leave behind.
+    mockedRegistrationRepo.findActiveByEmployeeId.mockResolvedValue(null);
+    mockedRegistrationRepo.updateStatus.mockResolvedValue({} as never);
   });
 
   it("rejects with a 404 when the winner doesn't exist", async () => {
@@ -430,12 +457,29 @@ describe("drawService.redrawWinner", () => {
         employeeId: 11,
         deviceId: 1,
         drawId: 100,
-        priceDue: baseDevice.price,
+        priceDue: baseWinner.priceDue,
         redrawOf: 1,
         redrawReason: "NON_PAYMENT",
       }),
       expect.anything(),
     );
+  });
+
+  // Regression, whole-system audit finding: this used to re-read
+  // device.price fresh at redraw time — deviceService.updateDevice()
+  // only gates the `status` field, so price stays editable at any
+  // status, meaning a price edit between the original draw and a later
+  // redraw would give the replacement winner a different price than
+  // every other winner on the same draw/device owes. The replacement
+  // must inherit the *original* winner's locked-in priceDue instead —
+  // confirmed here by asserting the device is never even looked up for
+  // pricing purposes anymore.
+  it("never reads the device's current price when pricing the replacement winner", async () => {
+    // Act
+    await drawService.redrawWinner(1, "NON_PAYMENT", 1);
+
+    // Assert
+    expect(mockedDeviceRepo.findById).not.toHaveBeenCalled();
   });
 
   it("skips a waiting-list candidate who fails re-validation and picks the next one", async () => {
@@ -456,12 +500,50 @@ describe("drawService.redrawWinner", () => {
     );
   });
 
-  it("sets the new winner's lastWinnerDate", async () => {
+  // Regression, whole-system audit finding: this used to stamp the
+  // *replacement* winner's lastWinnerDate immediately, same as runDraw()
+  // did for an original winner — see that test file's matching
+  // regression test for why selection alone no longer starts the
+  // cooldown for anyone, redrawn-in or not; only
+  // winnerService.recordPayment() does, once payment is confirmed.
+  it("does not stamp the replacement winner's lastWinnerDate at selection time", async () => {
     // Act
     await drawService.redrawWinner(1, "NON_PAYMENT", 1);
 
     // Assert
-    expect(mockedEmployeeRepo.markAsWinner).toHaveBeenCalledWith(11, expect.anything());
+    expect(mockedDrawRepo.createWinner).toHaveBeenCalled();
+    expect(mockedEmployeeRepo.markAsWinner).not.toHaveBeenCalled();
+  });
+
+  // Regression, whole-system audit finding: the original winner's
+  // registration used to stay ELIGIBLE forever after being redrawn away,
+  // permanently satisfying registrationRepository.findActiveByEmployeeId
+  // ()'s one-active-registration check and blocking that employee from
+  // ever registering for a *different* device, even though they never
+  // actually won or received anything.
+  it("closes out the original winner's active registration so they can register again", async () => {
+    // Arrange
+    mockedRegistrationRepo.findActiveByEmployeeId.mockResolvedValue({ id: 55, employeeId: 10 } as never);
+    mockedRegistrationRepo.updateStatus.mockResolvedValue({} as never);
+
+    // Act
+    await drawService.redrawWinner(1, "NON_PAYMENT", 1);
+
+    // Assert — employeeId 10 is baseWinner's employee, the one being
+    // redrawn away.
+    expect(mockedRegistrationRepo.findActiveByEmployeeId).toHaveBeenCalledWith(10, expect.anything());
+    expect(mockedRegistrationRepo.updateStatus).toHaveBeenCalledWith(55, "WITHDRAWN", expect.anything());
+  });
+
+  it("does nothing if the original winner has no active registration left to close", async () => {
+    // Arrange — e.g. an admin already closed it out some other way.
+    mockedRegistrationRepo.findActiveByEmployeeId.mockResolvedValue(null);
+
+    // Act
+    await drawService.redrawWinner(1, "NON_PAYMENT", 1);
+
+    // Assert
+    expect(mockedRegistrationRepo.updateStatus).not.toHaveBeenCalled();
   });
 
   it("writes an audit log entry for the redraw", async () => {
@@ -576,14 +658,6 @@ describe("drawService.redrawWinner", () => {
   it("rejects with a 404 when the draw can't be found", async () => {
     // Arrange
     mockedDrawRepo.findByIdWithWinners.mockResolvedValue(null);
-
-    // Act / Assert
-    await expect(drawService.redrawWinner(1, "NON_PAYMENT", 1)).rejects.toMatchObject({ statusCode: 404 });
-  });
-
-  it("rejects with a 404 when the device can't be found", async () => {
-    // Arrange
-    mockedDeviceRepo.findById.mockResolvedValue(null);
 
     // Act / Assert
     await expect(drawService.redrawWinner(1, "NON_PAYMENT", 1)).rejects.toMatchObject({ statusCode: 404 });

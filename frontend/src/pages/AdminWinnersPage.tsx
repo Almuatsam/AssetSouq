@@ -169,7 +169,16 @@ export default function AdminWinnersPage() {
                     <td className="px-4 py-3">
                       {winner.handoverDate ? null : (
                         <div className="flex flex-wrap items-center gap-3">
-                          {winner.paymentStatus !== "PAID" && (
+                          {/* Also excludes an already-redrawn row here, not
+                              just from the Redraw action below — the
+                              backend now rejects recording payment against
+                              a superseded winner row (see
+                              winnerService.recordPayment()'s
+                              findByRedrawOf guard), so hiding Mark Paid/
+                              Mark Non-Payment for it too keeps the UI from
+                              offering an action that can no longer
+                              succeed. */}
+                          {winner.paymentStatus !== "PAID" && !redrawnWinnerIds.has(winner.id) && (
                             <>
                               <button
                                 type="button"
@@ -187,13 +196,11 @@ export default function AdminWinnersPage() {
                               >
                                 {t("adminWinners.markNonPayment")}
                               </button>
-                              {!redrawnWinnerIds.has(winner.id) && (
-                                <RedrawWinnerAction
-                                  winnerId={winner.id}
-                                  onSuccess={() => setActionError(null)}
-                                  onError={setActionError}
-                                />
-                              )}
+                              <RedrawWinnerAction
+                                winnerId={winner.id}
+                                onSuccess={() => setActionError(null)}
+                                onError={setActionError}
+                              />
                             </>
                           )}
                           {winner.paymentStatus === "PAID" && (

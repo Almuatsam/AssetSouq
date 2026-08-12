@@ -146,8 +146,12 @@ export const registrationRepository = {
     });
   },
 
-  updateStatus(id: number, status: RegistrationStatus): Promise<Registration> {
-    return prisma.registration.update({ where: { id }, data: { status } });
+  // Optional `db` so drawService.redrawWinner() can close out the
+  // original winner's registration atomically inside its own
+  // transaction (see that function for why) — every other caller keeps
+  // using the default pooled client.
+  updateStatus(id: number, status: RegistrationStatus, db: Db = prisma): Promise<Registration> {
+    return db.registration.update({ where: { id }, data: { status } });
   },
 
   // Admin dashboard stats (see services/dashboardService.ts). Every

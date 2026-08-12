@@ -3,10 +3,9 @@ import type { Draw, Prisma, RedrawReason, Winner } from "@prisma/client";
 import { prisma } from "../config/prisma";
 
 // Accepts either the shared client or an interactive-transaction client —
-// a draw's Draw row, its Winner rows, the device status flip, and each
-// winner's lastWinnerDate must all commit atomically (see
-// services/drawService.ts's $transaction), so every write here needs to
-// be able to run inside that transaction.
+// a draw's Draw row, its Winner rows, and the device status flip must all
+// commit atomically (see services/drawService.ts's $transaction), so
+// every write here needs to be able to run inside that transaction.
 type Db = typeof prisma | Prisma.TransactionClient;
 
 export interface CreateDrawData {

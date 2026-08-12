@@ -7,9 +7,9 @@ export type UpdateEmployeeData = Partial<
   Omit<Prisma.EmployeeUpdateInput, "staffNumber" | "createdAt" | "updatedAt">
 >;
 
-// See deviceRepository.ts's identical Db type for the rationale — the
-// draw engine's markAsWinner() must commit atomically with the Draw/
-// Winner rows it's created alongside (services/drawService.ts).
+// See deviceRepository.ts's identical Db type for the rationale —
+// markAsWinner() must commit atomically with the payment-status update
+// it always runs alongside (services/winnerService.ts's recordPayment()).
 type Db = typeof prisma | Prisma.TransactionClient;
 
 export interface EmployeeListFilters {
@@ -79,10 +79,12 @@ export const employeeRepository = {
     return { total, active, eligible };
   },
 
-  // Draw engine (Phase 4, see services/drawService.ts) — deliberately
-  // separate from update() (which explicitly excludes lastWinnerDate, see
+  // Called only from services/winnerService.ts's recordPayment(), once a
+  // winner's payment is actually confirmed (not at draw-time selection —
+  // see that function's comment for why) — deliberately separate from
+  // update() (which explicitly excludes lastWinnerDate, see
   // UpdateEmployeeData/adminEmployeeValidators.ts) since this is
-  // system-managed by a winning draw, never a direct admin edit.
+  // system-managed by a confirmed win, never a direct admin edit.
   markAsWinner(employeeId: number, db: Db = prisma): Promise<Employee> {
     return db.employee.update({ where: { id: employeeId }, data: { lastWinnerDate: new Date() } });
   },

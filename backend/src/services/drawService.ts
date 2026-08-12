@@ -100,12 +100,18 @@ export const drawService = {
         tx,
       );
 
+      // employee.lastWinnerDate (the 24-month re-entry cooldown) is
+      // deliberately NOT stamped here — merely being selected isn't a
+      // completed win. See winnerService.recordPayment()'s comment for
+      // why that's the right point to start the cooldown instead, and
+      // why leaving it unset here is what lets redrawWinner() below
+      // replace a declined/unpaid/no-show winner without that candidate
+      // ever being penalized for a win they didn't actually receive.
       for (const employeeId of winnerEmployeeIds) {
         await drawRepository.createWinner(
           { employeeId, deviceId, drawId: createdDraw.id, priceDue: device.price },
           tx,
         );
-        await employeeRepository.markAsWinner(employeeId, tx);
       }
 
       await deviceRepository.markDrawn(deviceId, tx);
@@ -152,10 +158,6 @@ export const drawService = {
     const draw = await drawRepository.findByIdWithWinners(originalWinner.drawId);
     if (!draw) {
       throw new AppError(404, "Draw not found");
-    }
-    const device = await deviceRepository.findById(draw.deviceId);
-    if (!device) {
-      throw new AppError(404, "Device not found");
     }
 
     // Draw.candidatePoolSnapshot is a Prisma Json column (typed as
@@ -221,13 +223,49 @@ export const drawService = {
           employeeId: nextWinnerEmployeeId,
           deviceId: draw.deviceId,
           drawId: draw.id,
-          priceDue: device.price,
+          // Reuses the *original* winner's locked-in price — read from
+          // lockedWinner (the lock-protected re-read above), not a fresh
+          // read of device.price — deviceService.updateDevice() only
+          // gates the `status` field, so price stays editable at any
+          // status. Re-reading it here would let a price change made
+          // between the original draw and this redraw silently give the
+          // replacement winner a different price than every other
+          // winner on the same draw/device owes, undermining the same
+          // "price fixed at listing time" guarantee runDraw() already
+          // gives every *other* winner via this same column (see
+          // docs/04-Backend-Schema.md's note on Winner.priceDue). A
+          // redraw replaces who owes it, not what's owed.
+          priceDue: lockedWinner.priceDue,
           redrawOf: winnerId,
           redrawReason: reason,
         },
         tx,
       );
-      await employeeRepository.markAsWinner(nextWinnerEmployeeId, tx);
+
+      // Neither the winner creation above nor the registration close-out
+      // below touches employee.lastWinnerDate — see
+      // winnerService.recordPayment()'s comment for why that cooldown is
+      // stamped at payment confirmation, not selection, which is what
+      // makes this redraw safe to run without penalizing
+      // lockedWinner's employee for a win they never actually received.
+      //
+      // Close out the original winner's registration so they're not
+      // permanently blocked from registering for a *different* device —
+      // it's still sitting ELIGIBLE (the status registerInterest() wrote
+      // at submission time) and, left that way, would forever satisfy
+      // registrationRepository.findActiveByEmployeeId()'s one-active-
+      // registration check for an employee who, after being redrawn
+      // away, has neither won nor holds any active interest anymore. A
+      // best-effort lookup, not a hard requirement — if an admin already
+      // closed it out some other way, there's nothing left to do here.
+      const originalRegistration = await registrationRepository.findActiveByEmployeeId(
+        lockedWinner.employeeId,
+        tx,
+      );
+      if (originalRegistration) {
+        await registrationRepository.updateStatus(originalRegistration.id, "WITHDRAWN", tx);
+      }
+
       await auditLogRepository.create(
         { adminId, action: "REDRAW_WINNER", entity: "Winner", entityId: newWinner.id },
         tx,

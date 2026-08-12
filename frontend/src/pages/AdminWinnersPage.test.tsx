@@ -147,6 +147,28 @@ describe("AdminWinnersPage", () => {
       expect(within(row).queryByRole("button", { name: /mark non-payment/i })).not.toBeInTheDocument();
     });
 
+    it("shows no payment/redraw actions for a winner who has already been redrawn away", async () => {
+      // Arrange — a replacement winner (redrawOf: 1) exists alongside the
+      // original, still-PENDING row it replaced. The backend now rejects
+      // recording payment against a superseded winner row (see
+      // winnerService.recordPayment()'s findByRedrawOf guard), so Mark
+      // Paid/Mark Non-Payment must be hidden here too, not just Redraw.
+      const replacementWinner = { ...baseWinner, id: 2, employeeId: 11, redrawOf: 1 };
+      mockedAdminWinnerService.listAll.mockResolvedValue([baseWinner, replacementWinner]);
+
+      // Act
+      renderWithProviders(<AdminWinnersPage />);
+      const rows = await screen.findAllByRole("row");
+      const originalRow = rows[1];
+
+      // Assert
+      expect(within(originalRow).queryByRole("button", { name: /mark paid/i })).not.toBeInTheDocument();
+      expect(
+        within(originalRow).queryByRole("button", { name: /mark non-payment/i }),
+      ).not.toBeInTheDocument();
+      expect(within(originalRow).queryByRole("button", { name: /^redraw$/i })).not.toBeInTheDocument();
+    });
+
     it("shows no actions for a handed-over winner", async () => {
       // Arrange
       mockedAdminWinnerService.listAll.mockResolvedValue([handedOverWinner]);
