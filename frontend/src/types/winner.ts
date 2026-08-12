@@ -44,6 +44,13 @@ export interface WinnerListFilters {
   paymentStatus?: PaymentStatus;
 }
 
+// Mirrors backend/src/validators/adminWinnerValidators.ts's
+// recordPaymentSchema — PENDING is intentionally not a valid target.
+export interface RecordPaymentInput {
+  paymentStatus: "PAID" | "NON_PAYMENT";
+  paymentMethod?: string;
+}
+
 // Mirrors backend POST /admin/draws's DrawWithWinners.winners — narrower
 // than Winner above (no device join, no payment/handover/redraw fields)
 // since that's all drawRepository.findByIdWithWinners actually selects.

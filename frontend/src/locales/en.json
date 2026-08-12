@@ -218,6 +218,25 @@
       "PENDING": "Pending",
       "PAID": "Paid",
       "NON_PAYMENT": "Non-Payment"
-    }
+    },
+    "actions": "Actions",
+    "markPaid": "Mark Paid",
+    "markNonPayment": "Mark Non-Payment",
+    "recordHandover": "Record Handover",
+    "redraw": "Redraw",
+    "confirmMarkPaid": "Mark this winner as paid?",
+    "confirmMarkNonPayment": "Mark this winner as non-payment? They will remain eligible for a redraw.",
+    "confirmHandover": "Record that this device has been handed over to the winner?",
+    "confirmRedraw": "Redraw this device to the next eligible candidate on the waiting list?",
+    "paymentMethodPrompt": "Payment method (optional)",
+    "redrawReasonLabel": "Redraw reason",
+    "redrawReasonValues": {
+      "DECLINED": "Declined",
+      "NON_PAYMENT": "Non-Payment",
+      "NO_SHOW": "No Show",
+      "ADMIN_OVERRIDE": "Admin Override"
+    },
+    "actionError": "Couldn't complete that action. Please try again.",
+    "handedOverOn": "Handed over on {{date}}"
   }
 }

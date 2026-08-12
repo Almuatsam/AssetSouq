@@ -218,6 +218,25 @@
       "PENDING": "قيد الانتظار",
       "PAID": "مدفوع",
       "NON_PAYMENT": "غير مدفوع"
-    }
+    },
+    "actions": "الإجراءات",
+    "markPaid": "تحديد كمدفوع",
+    "markNonPayment": "تحديد كغير مدفوع",
+    "recordHandover": "تسجيل التسليم",
+    "redraw": "إعادة السحب",
+    "confirmMarkPaid": "هل تريد تحديد هذا الفائز كمدفوع؟",
+    "confirmMarkNonPayment": "هل تريد تحديد هذا الفائز كغير مدفوع؟ سيظل مؤهلاً لإعادة السحب.",
+    "confirmHandover": "هل تريد تسجيل تسليم هذا الجهاز إلى الفائز؟",
+    "confirmRedraw": "هل تريد إعادة سحب هذا الجهاز للمرشح التالي المؤهل في قائمة الانتظار؟",
+    "paymentMethodPrompt": "طريقة الدفع (اختياري)",
+    "redrawReasonLabel": "سبب إعادة السحب",
+    "redrawReasonValues": {
+      "DECLINED": "مرفوض",
+      "NON_PAYMENT": "عدم الدفع",
+      "NO_SHOW": "لم يحضر",
+      "ADMIN_OVERRIDE": "تجاوز إداري"
+    },
+    "actionError": "تعذر إتمام هذا الإجراء. حاول مرة أخرى.",
+    "handedOverOn": "تم التسليم في {{date}}"
   }
 }

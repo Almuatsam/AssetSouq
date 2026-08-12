@@ -5,10 +5,12 @@ import { adminWinnerService } from "@/services/adminWinnerService";
 import type { Winner } from "@/types/winner";
 
 vi.mock("@/services/apiClient", () => ({
-  apiClient: { get: vi.fn() },
+  apiClient: { get: vi.fn(), patch: vi.fn(), post: vi.fn() },
 }));
 
 const mockedGet = apiClient.get as unknown as ReturnType<typeof vi.fn>;
+const mockedPatch = apiClient.patch as unknown as ReturnType<typeof vi.fn>;
+const mockedPost = apiClient.post as unknown as ReturnType<typeof vi.fn>;
 
 const baseWinner: Winner = {
   id: 1,
@@ -68,5 +70,91 @@ describe("adminWinnerService.listAll", () => {
 
     // Act / Assert
     await expect(adminWinnerService.listAll()).rejects.toThrow(/went wrong/i);
+  });
+});
+
+describe("adminWinnerService.recordPayment", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("records the payment", async () => {
+    // Arrange
+    mockedPatch.mockResolvedValue({
+      data: { success: true, data: { winner: { ...baseWinner, paymentStatus: "PAID" } } },
+    });
+
+    // Act
+    const result = await adminWinnerService.recordPayment(1, {
+      paymentStatus: "PAID",
+      paymentMethod: "Payroll deduction",
+    });
+
+    // Assert
+    expect(result.paymentStatus).toBe("PAID");
+    expect(mockedPatch).toHaveBeenCalledWith("/admin/winners/1/payment", {
+      paymentStatus: "PAID",
+      paymentMethod: "Payroll deduction",
+    });
+  });
+
+  it("normalizes a failed request into a user-facing error", async () => {
+    // Arrange
+    mockedPatch.mockRejectedValue(new Error("boom"));
+
+    // Act / Assert
+    await expect(adminWinnerService.recordPayment(1, { paymentStatus: "PAID" })).rejects.toThrow(
+      /went wrong/i,
+    );
+  });
+});
+
+describe("adminWinnerService.recordHandover", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("records the handover", async () => {
+    // Arrange
+    mockedPatch.mockResolvedValue({
+      data: { success: true, data: { winner: { ...baseWinner, handoverDate: "2026-01-02T00:00:00.000Z" } } },
+    });
+
+    // Act
+    const result = await adminWinnerService.recordHandover(1);
+
+    // Assert
+    expect(result.handoverDate).not.toBeNull();
+    expect(mockedPatch).toHaveBeenCalledWith("/admin/winners/1/handover", {});
+  });
+
+  it("surfaces the backend's error (e.g. not paid yet)", async () => {
+    // Arrange
+    mockedPatch.mockRejectedValue(new Error("boom"));
+
+    // Act / Assert
+    await expect(adminWinnerService.recordHandover(1)).rejects.toThrow(/went wrong/i);
+  });
+});
+
+describe("adminWinnerService.redraw", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("redraws the winner", async () => {
+    // Arrange
+    mockedPost.mockResolvedValue({
+      data: { success: true, data: { winner: { ...baseWinner, id: 2, employeeId: 11, redrawOf: 1 } } },
+    });
+
+    // Act
+    const result = await adminWinnerService.redraw(1, "NON_PAYMENT");
+
+    // Assert
+    expect(result.redrawOf).toBe(1);
+    expect(mockedPost).toHaveBeenCalledWith("/admin/winners/1/redraw", { reason: "NON_PAYMENT" });
+  });
+
+  it("normalizes a failed request into a user-facing error", async () => {
+    // Arrange
+    mockedPost.mockRejectedValue(new Error("boom"));
+
+    // Act / Assert
+    await expect(adminWinnerService.redraw(1, "NON_PAYMENT")).rejects.toThrow(/went wrong/i);
   });
 });
