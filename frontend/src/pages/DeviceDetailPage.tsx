@@ -68,7 +68,7 @@ export default function DeviceDetailPage() {
         ) : (
           <>
             <Card className="flex flex-col gap-3">
-              <h1 className="text-xl font-semibold text-primary">
+              <h1 className="text-xl font-semibold text-ink">
                 {device.brand} {device.model}
               </h1>
               <p className="text-sm text-gray">
@@ -119,7 +119,7 @@ export default function DeviceDetailPage() {
             ) : (
               <Card className="flex flex-col gap-4">
                 <div>
-                  <h2 className="font-semibold text-primary">{t("deviceDetail.termsTitle")}</h2>
+                  <h2 className="font-semibold text-ink">{t("deviceDetail.termsTitle")}</h2>
                   <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-gray">
                     <li>{t("deviceDetail.termsAsIs")}</li>
                     <li>{t("deviceDetail.termsNoSupport")}</li>

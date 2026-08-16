@@ -21,7 +21,7 @@ export function RegistrationStatusCard({ registration }: RegistrationStatusCardP
 
   return (
     <Card className="flex flex-col gap-3">
-      <h2 className="font-semibold text-primary">{t("registrationStatus.title")}</h2>
+      <h2 className="font-semibold text-ink">{t("registrationStatus.title")}</h2>
       <p className="text-sm text-gray">{t("registrationStatus.subtitle")}</p>
 
       <div className="flex items-center gap-2 text-sm">

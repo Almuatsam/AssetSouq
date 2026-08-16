@@ -135,7 +135,7 @@ export default function AdminEmployeeFormPage() {
         </Link>
 
         <Card>
-          <h1 className="mb-6 text-xl font-semibold text-primary">
+          <h1 className="mb-6 text-xl font-semibold text-ink">
             {isEditMode ? t("adminEmployeeForm.editTitle") : t("adminEmployeeForm.createTitle")}
           </h1>
 

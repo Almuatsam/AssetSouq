@@ -41,7 +41,7 @@ export default function AdminDashboardPage() {
     <main className="min-h-screen bg-background px-4 py-8">
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <header className="flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-semibold text-primary">
+          <h1 className="text-2xl font-semibold text-ink">
             {t("adminDashboard.welcome", { username })}
           </h1>
           <Button onClick={logout}>{t("common.logout")}</Button>
@@ -73,11 +73,11 @@ export default function AdminDashboardPage() {
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <Card className="flex flex-col gap-1">
                 <span className="text-sm text-gray">{t("adminDashboard.totalDevices")}</span>
-                <span className="text-3xl font-semibold text-primary">{stats.devices.total}</span>
+                <span className="text-3xl font-semibold text-ink">{stats.devices.total}</span>
               </Card>
               <Card className="flex flex-col gap-1">
                 <span className="text-sm text-gray">{t("adminDashboard.totalEmployees")}</span>
-                <span className="text-3xl font-semibold text-primary">{stats.employees.total}</span>
+                <span className="text-3xl font-semibold text-ink">{stats.employees.total}</span>
                 <span className="text-xs text-gray">
                   {t("adminDashboard.activeEligibleEmployees", {
                     active: stats.employees.active,
@@ -87,7 +87,7 @@ export default function AdminDashboardPage() {
               </Card>
               <Card className="flex flex-col gap-1">
                 <span className="text-sm text-gray">{t("adminDashboard.totalRegistrations")}</span>
-                <span className="text-3xl font-semibold text-primary">{stats.registrations.total}</span>
+                <span className="text-3xl font-semibold text-ink">{stats.registrations.total}</span>
               </Card>
             </div>
 

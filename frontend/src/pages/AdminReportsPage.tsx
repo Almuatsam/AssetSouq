@@ -52,7 +52,7 @@ export default function AdminReportsPage() {
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-primary">{t("adminReports.title")}</h1>
+            <h1 className="text-2xl font-semibold text-ink">{t("adminReports.title")}</h1>
             <p className="text-sm text-gray">{t("adminReports.subtitle")}</p>
           </div>
           <Button onClick={logout}>{t("common.logout")}</Button>
@@ -63,7 +63,7 @@ export default function AdminReportsPage() {
             const titleId = `${reportType}-report-title`;
             return (
               <Card key={reportType} className="flex flex-col gap-3">
-                <h2 id={titleId} className="text-lg font-semibold text-primary">
+                <h2 id={titleId} className="text-lg font-semibold text-ink">
                   {t(`adminReports.${reportType}Title`)}
                 </h2>
                 <p className="text-sm text-gray">{t(`adminReports.${reportType}Description`)}</p>

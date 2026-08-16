@@ -46,7 +46,7 @@ export default function EmployeeLoginPage() {
         noValidate
         className="w-full max-w-sm rounded-lg bg-white p-6 shadow-sm"
       >
-        <h1 className="mb-6 text-xl font-semibold text-primary">{t("auth.employeeLoginTitle")}</h1>
+        <h1 className="mb-6 text-xl font-semibold text-ink">{t("auth.employeeLoginTitle")}</h1>
 
         <TextField
           label={t("auth.staffId")}

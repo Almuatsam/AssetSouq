@@ -81,7 +81,7 @@ export default function AdminWinnersPage() {
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-primary">{t("adminWinners.title")}</h1>
+            <h1 className="text-2xl font-semibold text-ink">{t("adminWinners.title")}</h1>
             <p className="text-sm text-gray">{t("adminWinners.subtitle")}</p>
           </div>
           <Button onClick={logout}>{t("common.logout")}</Button>
