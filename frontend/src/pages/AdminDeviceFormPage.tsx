@@ -161,7 +161,7 @@ export default function AdminDeviceFormPage() {
         </Link>
 
         <Card>
-          <h1 className="mb-6 text-xl font-semibold text-primary">
+          <h1 className="mb-6 text-xl font-semibold text-ink">
             {isEditMode ? t("adminDeviceForm.editTitle") : t("adminDeviceForm.createTitle")}
           </h1>
 

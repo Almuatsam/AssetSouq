@@ -57,7 +57,7 @@ export default function AdminDevicesPage() {
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-primary">{t("adminDevices.title")}</h1>
+            <h1 className="text-2xl font-semibold text-ink">{t("adminDevices.title")}</h1>
             <p className="text-sm text-gray">{t("adminDevices.subtitle")}</p>
           </div>
           <div className="flex items-center gap-3">

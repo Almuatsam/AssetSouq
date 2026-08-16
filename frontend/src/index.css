@@ -1,12 +1,15 @@
+@import "./styles/tokens.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 html[dir="rtl"] body {
-  font-family: "IBM Plex Sans Arabic", sans-serif;
+  font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
 }
 
 body {
-  font-family: "Inter", sans-serif;
-  background-color: #f8fafc;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  background-color: rgb(var(--color-bg));
+  color: rgb(var(--color-ink));
 }

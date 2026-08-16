@@ -73,7 +73,7 @@ export default function AdminEmployeesPage() {
       <div className="mx-auto flex max-w-5xl flex-col gap-6">
         <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-primary">{t("adminEmployees.title")}</h1>
+            <h1 className="text-2xl font-semibold text-ink">{t("adminEmployees.title")}</h1>
             <p className="text-sm text-gray">{t("adminEmployees.subtitle")}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -89,7 +89,7 @@ export default function AdminEmployeesPage() {
 
         <Card className="flex flex-col gap-3">
           <div>
-            <h2 className="text-sm font-medium text-primary">{t("adminEmployees.importTitle")}</h2>
+            <h2 className="text-sm font-medium text-ink">{t("adminEmployees.importTitle")}</h2>
             <p className="text-xs text-gray">{t("adminEmployees.importDescription")}</p>
           </div>
           <form

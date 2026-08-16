@@ -13,7 +13,7 @@ export default function LandingPage() {
       </div>
 
       <div>
-        <h1 className="text-3xl font-bold text-primary">{t("app.name")}</h1>
+        <h1 className="text-3xl font-bold text-ink">{t("app.name")}</h1>
         <p className="mt-2 text-gray">{t("landing.tagline")}</p>
       </div>
 
