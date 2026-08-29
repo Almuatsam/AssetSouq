@@ -80,6 +80,7 @@ export default function AdminDevicesPage() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as DeviceStatus | "")}
             className="rounded-md border border-gray/30 px-3 py-1.5 text-sm"
+            data-tour="admin-devices-status-filter"
           >
             <option value="">{t("adminDevices.filterAll")}</option>
             {STATUS_OPTIONS.map((status) => (
@@ -112,7 +113,7 @@ export default function AdminDevicesPage() {
             {t("adminDevices.loadError")}
           </p>
         ) : devices && devices.length > 0 ? (
-          <Card className="overflow-x-auto p-0">
+          <Card className="overflow-x-auto p-0" data-tour="admin-devices-table">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-gray/15 text-gray">
                 <tr>

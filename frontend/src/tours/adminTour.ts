@@ -1,0 +1,107 @@
+import type { TourDefinition } from "./types";
+
+export const adminTour: TourDefinition = {
+  id: "admin-onboarding",
+  steps: [
+    {
+      id: "admin-welcome",
+      titleKey: "onboarding.adminTour.welcome.title",
+      bodyKey: "onboarding.adminTour.welcome.body",
+      placement: "center",
+    },
+    {
+      id: "admin-dashboard-stats",
+      titleKey: "onboarding.adminTour.dashboardStats.title",
+      bodyKey: "onboarding.adminTour.dashboardStats.body",
+      route: "/admin/dashboard",
+      targetSelector: "dashboard-stat-cards",
+      placement: "bottom",
+      checklistItemId: "exploreDashboard",
+    },
+    {
+      id: "admin-dashboard-charts",
+      titleKey: "onboarding.adminTour.dashboardCharts.title",
+      bodyKey: "onboarding.adminTour.dashboardCharts.body",
+      route: "/admin/dashboard",
+      targetSelector: "dashboard-charts",
+      placement: "top",
+    },
+    {
+      id: "admin-devices-management",
+      titleKey: "onboarding.adminTour.devicesManagement.title",
+      bodyKey: "onboarding.adminTour.devicesManagement.body",
+      route: "/admin/devices",
+      targetSelector: "admin-devices-table",
+      placement: "top",
+      checklistItemId: "learnDeviceManagement",
+    },
+    {
+      id: "admin-devices-filter",
+      titleKey: "onboarding.adminTour.devicesFilter.title",
+      bodyKey: "onboarding.adminTour.devicesFilter.body",
+      route: "/admin/devices",
+      targetSelector: "admin-devices-status-filter",
+      placement: "bottom",
+    },
+    {
+      id: "admin-device-form",
+      titleKey: "onboarding.adminTour.deviceForm.title",
+      bodyKey: "onboarding.adminTour.deviceForm.body",
+      route: "/admin/devices/new",
+      targetSelector: "admin-device-form",
+      placement: "top",
+    },
+    {
+      id: "admin-employees-import",
+      titleKey: "onboarding.adminTour.employeesImport.title",
+      bodyKey: "onboarding.adminTour.employeesImport.body",
+      route: "/admin/employees",
+      targetSelector: "admin-employees-import",
+      placement: "bottom",
+      checklistItemId: "reviewEmployees",
+    },
+    {
+      id: "admin-quick-links",
+      titleKey: "onboarding.adminTour.quickLinks.title",
+      bodyKey: "onboarding.adminTour.quickLinks.body",
+      route: "/admin/dashboard",
+      targetSelector: "dashboard-quick-links",
+      placement: "inline-end",
+    },
+    {
+      id: "admin-notifications",
+      titleKey: "onboarding.adminTour.notifications.title",
+      bodyKey: "onboarding.adminTour.notifications.body",
+      route: "/admin/devices",
+      // No reliable target — the "Draw complete" role="status" banner
+      // only exists right after running a draw. Copy describes it by
+      // name rather than pointing at a live element.
+      onMissingTarget: "center",
+      placement: "center",
+    },
+    {
+      id: "admin-account",
+      titleKey: "onboarding.adminTour.account.title",
+      bodyKey: "onboarding.adminTour.account.body",
+      route: "/admin/dashboard",
+      targetSelector: "logout-button",
+      placement: "bottom",
+    },
+    {
+      id: "admin-help-menu",
+      titleKey: "onboarding.adminTour.helpMenu.title",
+      bodyKey: "onboarding.adminTour.helpMenu.body",
+      route: "/admin/dashboard",
+      targetSelector: "help-account-button",
+      placement: "inline-start",
+      sideEffect: "open-help-popover",
+    },
+    {
+      id: "admin-complete",
+      titleKey: "onboarding.adminTour.complete.title",
+      bodyKey: "onboarding.adminTour.complete.body",
+      placement: "center",
+      sideEffect: "close-help-popover",
+    },
+  ],
+};

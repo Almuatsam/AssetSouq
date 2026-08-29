@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 import { EmployeeStatusBadges } from "@/components/EmployeeStatusBadges";
+import { InlineHelp } from "@/components/InlineHelp";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
@@ -87,9 +88,15 @@ export default function AdminEmployeesPage() {
           </div>
         </header>
 
-        <Card className="flex flex-col gap-3">
+        <Card className="flex flex-col gap-3" data-tour="admin-employees-import">
           <div>
-            <h2 className="text-sm font-medium text-ink">{t("adminEmployees.importTitle")}</h2>
+            <h2 className="flex items-center gap-1 text-sm font-medium text-ink">
+              {t("adminEmployees.importTitle")}
+              <InlineHelp
+                titleKey="onboarding.inlineHelp.employeeImportFormat.title"
+                bodyKey="onboarding.inlineHelp.employeeImportFormat.body"
+              />
+            </h2>
             <p className="text-xs text-gray">{t("adminEmployees.importDescription")}</p>
           </div>
           <form

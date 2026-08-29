@@ -2,10 +2,12 @@ import { useTranslation } from "react-i18next";
 
 import { DeviceCard } from "@/components/DeviceCard";
 import { RegistrationStatusCard } from "@/components/RegistrationStatusCard";
+import { OnboardingChecklist } from "@/components/tour/OnboardingChecklist";
 import { Button } from "@/components/ui/Button";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { useDevices } from "@/hooks/useDevices";
 import { useMyRegistration } from "@/hooks/useMyRegistration";
+import { useOnboardingProgress } from "@/hooks/useOnboardingProgress";
 import { useAuth } from "@/store/AuthContext";
 
 // An employee with an active registration can't register for anything
@@ -18,17 +20,51 @@ export default function DevicesPage() {
 
   const { data: registration, isLoading: isRegistrationLoading } = useMyRegistration();
   const { data: devices, isLoading: isDevicesLoading, isError: isDevicesError } = useDevices();
+  const { data: onboardingProgress } = useOnboardingProgress(!!session);
 
   return (
     <main className="min-h-screen bg-background px-4 py-8">
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
-        <header className="flex items-center justify-between gap-4">
+        <header className="flex items-center justify-between gap-4" data-tour="devices-header">
           <div>
             <h1 className="text-2xl font-semibold text-ink">{t("devices.greeting", { name })}</h1>
             <p className="text-sm text-gray">{t("devices.title")}</p>
           </div>
-          <Button onClick={logout}>{t("common.logout")}</Button>
+          <Button onClick={logout} data-tour="logout-button">
+            {t("common.logout")}
+          </Button>
         </header>
+
+        <OnboardingChecklist
+          progress={onboardingProgress}
+          items={[
+            {
+              id: "takeTour",
+              labelKey: "onboarding.checklist.employee.takeTour",
+              complete: onboardingProgress?.status === "completed",
+            },
+            {
+              id: "browseDevices",
+              labelKey: "onboarding.checklist.employee.browseDevices",
+              complete: Boolean(onboardingProgress?.checklist.items.browseDevices),
+            },
+            {
+              id: "learnRegistration",
+              labelKey: "onboarding.checklist.employee.learnRegistration",
+              complete: Boolean(onboardingProgress?.checklist.items.learnRegistration),
+            },
+            {
+              id: "registerFirstDevice",
+              labelKey: "onboarding.checklist.employee.registerFirstDevice",
+              complete: Boolean(registration),
+            },
+            {
+              id: "findHelp",
+              labelKey: "onboarding.checklist.employee.findHelp",
+              complete: Boolean(onboardingProgress?.checklist.items.findHelp),
+            },
+          ]}
+        />
 
         {isRegistrationLoading ? (
           <LoadingIndicator />
@@ -41,7 +77,7 @@ export default function DevicesPage() {
             {t("devices.loadError")}
           </p>
         ) : devices && devices.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2" data-tour="devices-grid">
             {devices.map((device) => (
               <DeviceCard key={device.id} device={device} />
             ))}

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 
+import { InlineHelp } from "@/components/InlineHelp";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
@@ -129,9 +130,13 @@ export default function DeviceDetailPage() {
                 </div>
 
                 <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-3">
-                  <label className="flex items-start gap-2 text-sm">
+                  <label className="flex items-start gap-2 text-sm" data-tour="registration-agree-checkbox">
                     <input type="checkbox" className="mt-1 accent-primary" {...register("agreed")} />
                     <span>{t("deviceDetail.agreeLabel")}</span>
+                    <InlineHelp
+                      titleKey="onboarding.inlineHelp.registrationAgree.title"
+                      bodyKey="onboarding.inlineHelp.registrationAgree.body"
+                    />
                   </label>
                   {errors.agreed && (
                     <p role="alert" className="text-sm text-danger">
@@ -143,7 +148,7 @@ export default function DeviceDetailPage() {
                       {serverError}
                     </p>
                   )}
-                  <Button type="submit" isLoading={isBusy}>
+                  <Button type="submit" isLoading={isBusy} data-tour="registration-submit">
                     {isBusy ? t("deviceDetail.registering") : t("deviceDetail.registerCta")}
                   </Button>
                 </form>

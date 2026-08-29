@@ -29,8 +29,9 @@ model Employee {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  registrations  Registration[]
-  winners        Winner[]
+  registrations      Registration[]
+  winners            Winner[]
+  onboardingProgress OnboardingProgress?
 
   @@index([active])
 }
@@ -73,8 +74,8 @@ model Registration {
   submittedAt DateTime           @default(now())
   status      RegistrationStatus @default(PENDING)
 
-  employee    Employee @relation(fields: [employeeId], references: [id])
-  device      Device   @relation(fields: [deviceId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+  device   Device   @relation(fields: [deviceId], references: [id])
 
   // "One Registration Per Employee" / "One Device Per Employee" (PRD
   // business rules 2 & 5) are enforced in the service layer alongside the
@@ -154,8 +155,34 @@ model Admin {
   passwordHash String
   lastLogin    DateTime?
 
-  draws     Draw[]
-  auditLogs AuditLog[]
+  draws              Draw[]
+  auditLogs          AuditLog[]
+  onboardingProgress OnboardingProgress?
+}
+
+// Guided-tour onboarding state, one row per account. Employee and Admin
+// are separate tables with colliding id spaces (see the two nullable FKs
+// below), so this can't be a simple single FK — same "small satellite
+// table with an optional FK" shape as AuditLog.adminId. onDelete: Cascade
+// is deliberate here (unlike Registration/Winner's implicit RESTRICT):
+// this row is disposable UI state, not a business record that must
+// survive its owner's deletion.
+model OnboardingProgress {
+  id                  Int       @id @default(autoincrement())
+  employeeId          Int?      @unique
+  adminId             Int?      @unique
+  tourStartedAt       DateTime?
+  tourCompletedAt     DateTime?
+  tourSkippedAt       DateTime?
+  currentStepId       String?
+  tourVersion         Int?
+  whatsNewSeenVersion Int?
+  checklist           Json      @default("{}")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  employee Employee? @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  admin    Admin?    @relation(fields: [adminId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {

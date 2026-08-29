@@ -11,3 +11,21 @@ import { i18nReady } from "@/utils/i18n";
 beforeAll(async () => {
   await i18nReady;
 });
+
+// jsdom doesn't implement window.matchMedia — hooks/useReducedMotion.ts
+// and hooks/useIsMobileViewport.ts (used by the guided tour) are the
+// first code in this app to need it. Defaults to "no match" (matches:
+// false) for every query; individual tests override via
+// window.matchMedia = vi.fn(...) when they need a specific query to match.
+if (typeof window !== "undefined" && !window.matchMedia) {
+  window.matchMedia = (query: string) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: () => {},
+    removeListener: () => {},
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  });
+}

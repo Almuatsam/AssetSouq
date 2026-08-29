@@ -274,5 +274,145 @@
     "entity": "Entity",
     "entityId": "Entity ID",
     "unknownAdmin": "Unknown"
+  },
+  "onboarding": {
+    "common": {
+      "next": "Next",
+      "previous": "Previous",
+      "skip": "Skip tour",
+      "finish": "Finish",
+      "stepProgress": "Step {{current}} of {{total}}",
+      "helpMenuLabel": "Help & account",
+      "restartTour": "Take the tour again",
+      "whatsNew": "What's new",
+      "checklistTitle": "Getting started",
+      "checklistDismiss": "Dismiss"
+    },
+    "employeeTour": {
+      "welcome": {
+        "title": "Welcome to AssetSouq",
+        "body": "This is where you browse IT devices the company is retiring and register your interest in one. A short tour will show you around — you can skip it any time."
+      },
+      "devicesHeader": {
+        "title": "Your devices page",
+        "body": "This is your home base for the raffle. Your name and a quick way to sign out are always here."
+      },
+      "devicesGrid": {
+        "title": "Browse available devices",
+        "body": "Every device currently open for entry appears here as a card. New devices are added as they become available."
+      },
+      "deviceCard": {
+        "title": "A device card",
+        "body": "Each card shows the device and its price. Select View Details to see full specs and register your interest."
+      },
+      "registrationForm": {
+        "title": "Review the details",
+        "body": "Check the specs and read the terms before registering. You can only have one active registration at a time, so pick carefully."
+      },
+      "registrationSubmit": {
+        "title": "Register your interest",
+        "body": "Agree to the terms and submit to enter the draw. If you're selected, you'll be notified right here and asked to complete payment."
+      },
+      "registrationStatus": {
+        "title": "Track your registration",
+        "body": "Once you've registered, this card replaces the device list and shows your current status — pending, eligible, or a result."
+      },
+      "notifications": {
+        "title": "Where updates appear",
+        "body": "AssetSouq doesn't have a separate notifications inbox — status changes like this one show up right where they're relevant, so you never have to go looking for them."
+      },
+      "account": {
+        "title": "Signing out",
+        "body": "Use this button any time you're done for the day. There's no separate account page to manage — signing in is tied to your staff number."
+      },
+      "helpMenu": {
+        "title": "Help is always nearby",
+        "body": "This button follows you everywhere. Come back here to replay this tour, check what's new, or switch languages."
+      },
+      "complete": {
+        "title": "You're all set",
+        "body": "That's everything you need to know. Head back to the devices list whenever you're ready to register your interest."
+      }
+    },
+    "adminTour": {
+      "welcome": {
+        "title": "Welcome, admin",
+        "body": "This tour walks through managing devices, employees, and the raffle draw. Skip any time — you can always come back to it later."
+      },
+      "dashboardStats": {
+        "title": "Your dashboard at a glance",
+        "body": "These cards summarize devices, employees, and registrations in real time. Check here first each day to see what needs attention."
+      },
+      "dashboardCharts": {
+        "title": "Status breakdowns",
+        "body": "These charts show how devices and registrations are distributed across each status, so you can spot backlogs at a glance."
+      },
+      "devicesManagement": {
+        "title": "Manage devices",
+        "body": "Every device lives in this table with its price, status, and quick actions. Edit, run a draw, remove, or restore a device right from here."
+      },
+      "devicesFilter": {
+        "title": "Filter by status",
+        "body": "Narrow the table to just Available, Removed, Drawn, or Sold devices — useful once the list grows."
+      },
+      "deviceForm": {
+        "title": "Add or edit a device",
+        "body": "Fill in the specs and price, then save. Required fields are validated as you go, so you'll know right away if something's missing."
+      },
+      "employeesImport": {
+        "title": "Bulk import employees",
+        "body": "Upload an Excel (.xlsx) file to create or update many employees at once, instead of adding them one by one."
+      },
+      "quickLinks": {
+        "title": "Jump to any section",
+        "body": "Registrations, winners, reports, and the audit log are all one click away from here."
+      },
+      "notifications": {
+        "title": "Where updates appear",
+        "body": "AssetSouq doesn't have a separate notifications inbox — after you run a draw, the result appears right on the devices page, in context."
+      },
+      "account": {
+        "title": "Signing out",
+        "body": "Your admin account also has a password, though there's no self-service way to change it yet — reach out to have it reset if you ever need to."
+      },
+      "helpMenu": {
+        "title": "Help is always nearby",
+        "body": "This button follows you everywhere. Come back here to replay this tour, check what's new, or switch languages."
+      },
+      "complete": {
+        "title": "You're ready to go",
+        "body": "That covers the essentials. Head to Registrations to see what's waiting for review."
+      }
+    },
+    "checklist": {
+      "employee": {
+        "takeTour": "Take the product tour",
+        "browseDevices": "Browse available devices",
+        "learnRegistration": "Learn how registration works",
+        "registerFirstDevice": "Register for your first device",
+        "findHelp": "Know where to find help"
+      },
+      "admin": {
+        "takeTour": "Take the product tour",
+        "exploreDashboard": "Explore the dashboard",
+        "learnDeviceManagement": "Learn how device management works",
+        "createFirstDevice": "Add your first device",
+        "reviewEmployees": "Review your employees"
+      }
+    },
+    "inlineHelp": {
+      "registrationAgree": {
+        "title": "About these terms",
+        "body": "Devices are sold as-is with no warranty or support, and are factory reset before handover. Handover only happens once management approves and the price is paid in full."
+      },
+      "employeeImportFormat": {
+        "title": "File format",
+        "body": "Upload an Excel (.xlsx) file with Staff Number, Name, Department, and Email columns. Matching staff numbers update existing employees; new ones are created."
+      },
+      "deviceQuantity": {
+        "title": "About quantity",
+        "body": "How many identical units of this device are available. Most listings are a single unit — list more only if several matching devices are being disposed of together."
+      }
+    }
   }
 }
