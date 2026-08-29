@@ -2,10 +2,12 @@ import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 
+import { OnboardingChecklist } from "@/components/tour/OnboardingChecklist";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useOnboardingProgress } from "@/hooks/useOnboardingProgress";
 import { useAuth } from "@/store/AuthContext";
 import type { DeviceStatus, RegistrationStatus } from "@/types/device";
 
@@ -27,6 +29,7 @@ export default function AdminDashboardPage() {
   const { session, logout } = useAuth();
   const username = session?.user.role === "ADMIN" ? session.user.admin.username : "";
   const { data: stats, isError } = useDashboardStats();
+  const { data: onboardingProgress } = useOnboardingProgress(!!session);
 
   const deviceChartData = DEVICE_STATUSES.map((status) => ({
     status: t(`deviceStatus.${status}`),
@@ -44,10 +47,43 @@ export default function AdminDashboardPage() {
           <h1 className="text-2xl font-semibold text-ink">
             {t("adminDashboard.welcome", { username })}
           </h1>
-          <Button onClick={logout}>{t("common.logout")}</Button>
+          <Button onClick={logout} data-tour="logout-button">
+            {t("common.logout")}
+          </Button>
         </header>
 
-        <Card className="flex flex-col gap-2">
+        <OnboardingChecklist
+          progress={onboardingProgress}
+          items={[
+            {
+              id: "takeTour",
+              labelKey: "onboarding.checklist.admin.takeTour",
+              complete: onboardingProgress?.status === "completed",
+            },
+            {
+              id: "exploreDashboard",
+              labelKey: "onboarding.checklist.admin.exploreDashboard",
+              complete: Boolean(onboardingProgress?.checklist.items.exploreDashboard),
+            },
+            {
+              id: "learnDeviceManagement",
+              labelKey: "onboarding.checklist.admin.learnDeviceManagement",
+              complete: Boolean(onboardingProgress?.checklist.items.learnDeviceManagement),
+            },
+            {
+              id: "createFirstDevice",
+              labelKey: "onboarding.checklist.admin.createFirstDevice",
+              complete: Boolean(stats && stats.devices.total > 0),
+            },
+            {
+              id: "reviewEmployees",
+              labelKey: "onboarding.checklist.admin.reviewEmployees",
+              complete: Boolean(onboardingProgress?.checklist.items.reviewEmployees),
+            },
+          ]}
+        />
+
+        <Card className="flex flex-col gap-2" data-tour="dashboard-quick-links">
           <Link to="/admin/devices" className="font-medium text-primary hover:underline">
             {t("adminDashboard.manageDevices")}
           </Link>
@@ -70,7 +106,7 @@ export default function AdminDashboardPage() {
 
         {stats ? (
           <>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3" data-tour="dashboard-stat-cards">
               <Card className="flex flex-col gap-1">
                 <span className="text-sm text-gray">{t("adminDashboard.totalDevices")}</span>
                 <span className="text-3xl font-semibold text-ink">{stats.devices.total}</span>
@@ -91,7 +127,7 @@ export default function AdminDashboardPage() {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2" data-tour="dashboard-charts">
               <Card className="overflow-x-auto">
                 <h2 id="devices-chart-title" className="mb-4 text-sm font-medium text-gray">
                   {t("adminDashboard.devicesByStatus")}

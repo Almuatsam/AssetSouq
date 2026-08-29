@@ -20,7 +20,7 @@ export function RegistrationStatusCard({ registration }: RegistrationStatusCardP
   const { t } = useTranslation();
 
   return (
-    <Card className="flex flex-col gap-3">
+    <Card className="flex flex-col gap-3" data-tour="registration-status-card">
       <h2 className="font-semibold text-ink">{t("registrationStatus.title")}</h2>
       <p className="text-sm text-gray">{t("registrationStatus.subtitle")}</p>
 
@@ -38,7 +38,7 @@ export function RegistrationStatusCard({ registration }: RegistrationStatusCardP
 
       <div className="flex items-center gap-2 text-sm">
         <span className="text-gray">{t("registrationStatus.status")}:</span>
-        <Badge variant={STATUS_BADGE_VARIANT[registration.status]}>
+        <Badge variant={STATUS_BADGE_VARIANT[registration.status]} data-tour="registration-status-badge">
           {t(`registrationStatus.statusValues.${registration.status}`)}
         </Badge>
       </div>

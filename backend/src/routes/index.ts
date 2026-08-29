@@ -10,6 +10,7 @@ import { adminReportRouter } from "./adminReportRoutes";
 import { adminWinnerRouter } from "./adminWinnerRoutes";
 import { authRouter } from "./authRoutes";
 import { deviceRouter } from "./deviceRoutes";
+import { onboardingRouter } from "./onboardingRoutes";
 import { registrationRouter } from "./registrationRoutes";
 
 const router = Router();
@@ -21,6 +22,7 @@ router.get("/health", (_req, res) => {
 router.use("/auth", authRouter);
 router.use("/devices", deviceRouter);
 router.use("/registrations", registrationRouter);
+router.use("/onboarding", onboardingRouter);
 router.use("/admin/devices", adminDeviceRouter);
 router.use("/admin/employees", adminEmployeeRouter);
 router.use("/admin/registrations", adminRegistrationRouter);

@@ -136,11 +136,15 @@ describe("AdminDeviceFormPage — create mode", () => {
     await user.type(screen.getByLabelText(/^brand/i), "HP");
     await user.type(screen.getByLabelText(/^model/i), "EliteBook 840");
     await user.type(screen.getByLabelText(/^price/i), "200");
-    await user.type(screen.getByLabelText(/quantity/i), "0");
+    // Anchored (not just /quantity/i) — an InlineHelp button next to this
+    // field has its own aria-label containing "quantity" too (see
+    // components/InlineHelp.tsx usage in AdminDeviceFormPage), so a loose
+    // substring match now resolves to two elements.
+    await user.type(screen.getByLabelText(/^quantity$/i), "0");
     await user.click(screen.getByRole("button", { name: /save/i }));
 
     // Assert — the field must surface the error, not just block submission silently
-    expect(await screen.findByLabelText(/quantity/i)).toHaveAccessibleDescription(/./);
+    expect(await screen.findByLabelText(/^quantity$/i)).toHaveAccessibleDescription(/./);
     expect(mockedAdminDeviceService.create).not.toHaveBeenCalled();
   });
 });

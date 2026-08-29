@@ -12,7 +12,7 @@ export function DeviceCard({ device }: DeviceCardProps) {
   const { t } = useTranslation();
 
   return (
-    <Card className="flex flex-col gap-2" data-testid="device-card">
+    <Card className="flex flex-col gap-2" data-testid="device-card" data-tour="device-card">
       <h2 className="font-semibold text-ink">
         {device.brand} {device.model}
       </h2>

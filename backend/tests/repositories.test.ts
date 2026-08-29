@@ -10,6 +10,7 @@ import { auditLogRepository } from "../src/repositories/auditLogRepository";
 import { deviceRepository } from "../src/repositories/deviceRepository";
 import { drawRepository } from "../src/repositories/drawRepository";
 import { employeeRepository } from "../src/repositories/employeeRepository";
+import { onboardingRepository } from "../src/repositories/onboardingRepository";
 import { registrationRepository } from "../src/repositories/registrationRepository";
 import { winnerRepository } from "../src/repositories/winnerRepository";
 
@@ -41,6 +42,7 @@ jest.mock("../src/config/prisma", () => ({
     draw: { create: jest.fn(), findUnique: jest.fn() },
     winner: { create: jest.fn(), findMany: jest.fn(), findUnique: jest.fn(), findFirst: jest.fn(), update: jest.fn() },
     auditLog: { create: jest.fn(), findMany: jest.fn() },
+    onboardingProgress: { findUnique: jest.fn(), create: jest.fn(), update: jest.fn() },
   },
 }));
 
@@ -77,6 +79,7 @@ const mockedPrisma = prisma as unknown as {
     update: jest.Mock;
   };
   auditLog: { create: jest.Mock; findMany: jest.Mock };
+  onboardingProgress: { findUnique: jest.Mock; create: jest.Mock; update: jest.Mock };
 };
 
 beforeEach(() => jest.clearAllMocks());
@@ -789,5 +792,58 @@ describe("auditLogRepository", () => {
     expect(mockedPrisma.auditLog.findMany).toHaveBeenCalledWith(
       expect.objectContaining({ where: { entity: "Winner", adminId: 1 } }),
     );
+  });
+});
+
+describe("onboardingRepository", () => {
+  it("findByEmployeeId() queries by employeeId", async () => {
+    // Act
+    await onboardingRepository.findByEmployeeId(10);
+
+    // Assert
+    expect(mockedPrisma.onboardingProgress.findUnique).toHaveBeenCalledWith({
+      where: { employeeId: 10 },
+    });
+  });
+
+  it("findByAdminId() queries by adminId", async () => {
+    // Act
+    await onboardingRepository.findByAdminId(5);
+
+    // Assert
+    expect(mockedPrisma.onboardingProgress.findUnique).toHaveBeenCalledWith({
+      where: { adminId: 5 },
+    });
+  });
+
+  it("createForEmployee() creates a row scoped to the employee with an empty checklist", async () => {
+    // Act
+    await onboardingRepository.createForEmployee(10);
+
+    // Assert
+    expect(mockedPrisma.onboardingProgress.create).toHaveBeenCalledWith({
+      data: { employeeId: 10, checklist: {} },
+    });
+  });
+
+  it("createForAdmin() creates a row scoped to the admin with an empty checklist", async () => {
+    // Act
+    await onboardingRepository.createForAdmin(5);
+
+    // Assert
+    expect(mockedPrisma.onboardingProgress.create).toHaveBeenCalledWith({
+      data: { adminId: 5, checklist: {} },
+    });
+  });
+
+  it("update() writes the given patch to the row by id", async () => {
+    // Act
+    await onboardingRepository.update(1, { tourCompletedAt: new Date("2026-01-01") });
+
+    // Assert
+    expect(mockedPrisma.onboardingProgress.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { tourCompletedAt: new Date("2026-01-01") },
+    });
   });
 });

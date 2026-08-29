@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 
+import { InlineHelp } from "@/components/InlineHelp";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { LoadingIndicator } from "@/components/ui/LoadingIndicator";
@@ -165,7 +166,12 @@ export default function AdminDeviceFormPage() {
             {isEditMode ? t("adminDeviceForm.editTitle") : t("adminDeviceForm.createTitle")}
           </h1>
 
-          <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            noValidate
+            className="flex flex-col gap-4"
+            data-tour="admin-device-form"
+          >
             <TextField
               label={t("adminDeviceForm.assetTag")}
               error={errors.assetTag?.message}
@@ -201,12 +207,21 @@ export default function AdminDeviceFormPage() {
               error={errors.price?.message}
               {...register("price")}
             />
-            <TextField
-              label={t("adminDeviceForm.quantity")}
-              type="number"
-              error={errors.quantity?.message}
-              {...register("quantity")}
-            />
+            <div className="flex items-start gap-1">
+              <div className="flex-1">
+                <TextField
+                  label={t("adminDeviceForm.quantity")}
+                  type="number"
+                  error={errors.quantity?.message}
+                  {...register("quantity")}
+                />
+              </div>
+              <InlineHelp
+                titleKey="onboarding.inlineHelp.deviceQuantity.title"
+                bodyKey="onboarding.inlineHelp.deviceQuantity.body"
+                className="mt-6"
+              />
+            </div>
 
             {serverError && (
               <p role="alert" className="text-sm text-danger">
