@@ -16,7 +16,7 @@ import { winnerRepository } from "../src/repositories/winnerRepository";
 
 jest.mock("../src/config/prisma", () => ({
   prisma: {
-    admin: { findUnique: jest.fn(), update: jest.fn() },
+    admin: { findUnique: jest.fn(), update: jest.fn(), updateMany: jest.fn() },
     employee: {
       findUnique: jest.fn(),
       findMany: jest.fn(),
@@ -47,7 +47,7 @@ jest.mock("../src/config/prisma", () => ({
 }));
 
 const mockedPrisma = prisma as unknown as {
-  admin: { findUnique: jest.Mock; update: jest.Mock };
+  admin: { findUnique: jest.Mock; update: jest.Mock; updateMany: jest.Mock };
   employee: {
     findUnique: jest.Mock;
     findMany: jest.Mock;
@@ -102,6 +102,46 @@ describe("adminRepository", () => {
       where: { id: 1 },
       data: { lastLogin: expect.any(Date) },
     });
+  });
+
+  it("findById() queries by id", async () => {
+    // Act
+    await adminRepository.findById(1);
+
+    // Assert
+    expect(mockedPrisma.admin.findUnique).toHaveBeenCalledWith({ where: { id: 1 } });
+  });
+
+  it("completeCredentialsHandover() conditionally updates only when credentialsChangedAt is still null, and returns the affected row count", async () => {
+    // Arrange
+    mockedPrisma.admin.updateMany.mockResolvedValue({ count: 1 });
+
+    // Act
+    const result = await adminRepository.completeCredentialsHandover(1, {
+      username: "newadmin",
+      passwordHash: "hashed",
+    });
+
+    // Assert
+    expect(result).toBe(1);
+    expect(mockedPrisma.admin.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, credentialsChangedAt: null },
+      data: { username: "newadmin", passwordHash: "hashed", credentialsChangedAt: expect.any(Date) },
+    });
+  });
+
+  it("completeCredentialsHandover() returns 0 when the row no longer matches (already completed)", async () => {
+    // Arrange
+    mockedPrisma.admin.updateMany.mockResolvedValue({ count: 0 });
+
+    // Act
+    const result = await adminRepository.completeCredentialsHandover(1, {
+      username: "newadmin",
+      passwordHash: "hashed",
+    });
+
+    // Assert
+    expect(result).toBe(0);
   });
 });
 

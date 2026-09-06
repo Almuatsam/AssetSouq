@@ -37,7 +37,7 @@ describe("ProtectedRoute", () => {
     // Arrange
     setStoredSession({
       token: "tok",
-      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null } },
+      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null, credentialsChangedAt: null } },
     });
 
     // Act

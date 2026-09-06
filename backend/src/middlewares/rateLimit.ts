@@ -96,6 +96,14 @@ export const adminReportReadRateLimiter = createUserKeyedRateLimiter(20);
 // needs many of these in one 15-minute window.
 export const adminEmployeeImportRateLimiter = createUserKeyedRateLimiter(10);
 
+// The one-time admin credential handover — succeeds at most once, ever,
+// per admin (see adminAccountService.changeInitialCredentials), so a
+// legitimate caller needs this maybe once. A tight budget mainly blunts
+// scripted brute-forcing of the "current username" guess this endpoint
+// otherwise wouldn't rate-limit on its own (it doesn't check the current
+// password, by design — see the validator's comment).
+export const adminAccountCredentialsRateLimiter = createUserKeyedRateLimiter(5);
+
 // Read-only, no side effects — a generous ceiling just to stop naive
 // scripted abuse, not to bound legitimate browsing.
 export const deviceRateLimiter = rateLimit({

@@ -16,13 +16,13 @@ vi.mock("@/services/authService", () => ({
 
 const mockedLoginAdmin = authService.loginAdmin as unknown as ReturnType<typeof vi.fn>;
 
-function renderPage() {
+function renderPage({ state }: { state?: unknown } = {}) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
     <QueryClientProvider client={queryClient}>
       <I18nextProvider i18n={i18n}>
         <AuthProvider>
-          <MemoryRouter initialEntries={["/admin/login"]}>
+          <MemoryRouter initialEntries={[{ pathname: "/admin/login", state }]}>
             <Routes>
               <Route path="/admin/login" element={<AdminLoginPage />} />
               <Route path="/admin/dashboard" element={<div>ADMIN_DASHBOARD</div>} />
@@ -58,7 +58,7 @@ describe("AdminLoginPage", () => {
     // Arrange
     mockedLoginAdmin.mockResolvedValue({
       token: "admin-tok",
-      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null } },
+      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null, credentialsChangedAt: null } },
     });
     const user = userEvent.setup();
     renderPage();
@@ -87,5 +87,22 @@ describe("AdminLoginPage", () => {
     // Assert
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid username or password");
     await waitFor(() => expect(screen.queryByText("ADMIN_DASHBOARD")).not.toBeInTheDocument());
+  });
+
+  it("shows the credential-change success banner when navigated here with that state", () => {
+    // Act — as AdminCredentialsSetupModal's navigate() call does after a
+    // successful one-time credential change.
+    renderPage({ state: { credentialsChangedSuccess: true } });
+
+    // Assert
+    expect(screen.getByRole("status")).toHaveTextContent(/updated.*log in with your new credentials/i);
+  });
+
+  it("does not show the success banner on a normal visit to the login page", () => {
+    // Act
+    renderPage();
+
+    // Assert
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
   });
 });

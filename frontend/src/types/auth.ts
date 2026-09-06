@@ -13,6 +13,12 @@ export interface AdminSummary {
   id: number;
   username: string;
   lastLogin: string | null;
+  // Null until this admin completes the one-time default-credential
+  // handover (see components/AdminCredentialsSetupModal.tsx); non-null
+  // forever after. Refreshed only by logging in again — this session
+  // snapshot is not re-fetched on every page load, matching how the rest
+  // of AuthSession already works (see store/AuthContext.tsx).
+  credentialsChangedAt: string | null;
 }
 
 export type AuthUser =

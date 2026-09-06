@@ -21,7 +21,7 @@ const mockedAdminDrawService = adminDrawService as unknown as { run: ReturnType<
 
 const adminSession = {
   token: "tok",
-  user: { role: "ADMIN" as const, admin: { id: 1, username: "admin1", lastLogin: null } },
+  user: { role: "ADMIN" as const, admin: { id: 1, username: "admin1", lastLogin: null, credentialsChangedAt: null } },
 };
 
 const availableDevice: Device = {

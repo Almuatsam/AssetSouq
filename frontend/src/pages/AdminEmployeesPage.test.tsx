@@ -18,7 +18,7 @@ const mockedAdminEmployeeService = adminEmployeeService as unknown as {
 
 const adminSession = {
   token: "tok",
-  user: { role: "ADMIN" as const, admin: { id: 1, username: "admin1", lastLogin: null } },
+  user: { role: "ADMIN" as const, admin: { id: 1, username: "admin1", lastLogin: null, credentialsChangedAt: null } },
 };
 
 const activeEmployee: Employee = {

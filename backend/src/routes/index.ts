@@ -1,5 +1,6 @@
 import { Router } from "express";
 
+import { adminAccountRouter } from "./adminAccountRoutes";
 import { adminAuditLogRouter } from "./adminAuditLogRoutes";
 import { adminDashboardRouter } from "./adminDashboardRoutes";
 import { adminDeviceRouter } from "./adminDeviceRoutes";
@@ -31,5 +32,6 @@ router.use("/admin/draws", adminDrawRouter);
 router.use("/admin/winners", adminWinnerRouter);
 router.use("/admin/reports", adminReportRouter);
 router.use("/admin/audit-logs", adminAuditLogRouter);
+router.use("/admin/account", adminAccountRouter);
 
 export { router };

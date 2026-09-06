@@ -41,7 +41,7 @@ describe("apiClient request interceptor", () => {
     // Arrange
     setStoredSession({
       token: "tok",
-      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null } },
+      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null, credentialsChangedAt: null } },
     });
 
     // Act
@@ -82,7 +82,7 @@ describe("apiClient response interceptor", () => {
     // Arrange
     setStoredSession({
       token: "tok",
-      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null } },
+      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null, credentialsChangedAt: null } },
     });
 
     // Act
@@ -119,7 +119,7 @@ describe("apiClient response interceptor", () => {
     // Arrange
     setStoredSession({
       token: "tok",
-      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null } },
+      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null, credentialsChangedAt: null } },
     });
     const serverError = new AxiosError("boom", "ERR_BAD_RESPONSE", undefined, undefined, {
       data: {},

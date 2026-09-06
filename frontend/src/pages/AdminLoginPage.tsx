@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/Button";
@@ -20,8 +20,15 @@ type AdminLoginForm = z.infer<typeof adminLoginSchema>;
 export default function AdminLoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [serverError, setServerError] = useState<string | null>(null);
+  // Set once, by AdminCredentialsSetupModal's navigate() call after a
+  // successful one-time credential change — read only at mount so it
+  // doesn't linger across an unrelated failed login attempt on this page.
+  const [credentialsChangedSuccess] = useState(
+    () => Boolean((location.state as { credentialsChangedSuccess?: boolean } | null)?.credentialsChangedSuccess),
+  );
 
   const {
     register,
@@ -48,6 +55,12 @@ export default function AdminLoginPage() {
         className="w-full max-w-sm rounded-lg bg-white p-6 shadow-sm"
       >
         <h1 className="mb-6 text-xl font-semibold text-ink">{t("auth.adminLoginTitle")}</h1>
+
+        {credentialsChangedSuccess && (
+          <p role="status" className="mb-4 rounded-md bg-success/10 px-3 py-2 text-sm text-success">
+            {t("adminAccountSetup.successMessage")}
+          </p>
+        )}
 
         <TextField
           label={t("auth.username")}

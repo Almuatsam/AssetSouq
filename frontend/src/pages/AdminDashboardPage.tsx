@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, Tooltip, XAxis, YAxis } from "recharts";
 
+import { AdminCredentialsSetupModal } from "@/components/AdminCredentialsSetupModal";
 import { OnboardingChecklist } from "@/components/tour/OnboardingChecklist";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -10,6 +12,10 @@ import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useOnboardingProgress } from "@/hooks/useOnboardingProgress";
 import { useAuth } from "@/store/AuthContext";
 import type { DeviceStatus, RegistrationStatus } from "@/types/device";
+import {
+  markCredentialsSetupDismissedThisSession,
+  wasCredentialsSetupDismissedThisSession,
+} from "@/utils/credentialsSetupDismissal";
 
 const DEVICE_STATUSES: DeviceStatus[] = ["AVAILABLE", "REMOVED", "DRAWN", "SOLD"];
 const REGISTRATION_STATUSES: RegistrationStatus[] = ["PENDING", "ELIGIBLE", "INELIGIBLE", "WITHDRAWN"];
@@ -27,9 +33,28 @@ const CHART_HEIGHT = 240;
 export default function AdminDashboardPage() {
   const { t } = useTranslation();
   const { session, logout } = useAuth();
-  const username = session?.user.role === "ADMIN" ? session.user.admin.username : "";
+  const admin = session?.user.role === "ADMIN" ? session.user.admin : null;
+  const username = admin?.username ?? "";
+  const hasCompletedCredentialsSetup = Boolean(admin?.credentialsChangedAt);
   const { data: stats, isError } = useDashboardStats();
   const { data: onboardingProgress } = useOnboardingProgress(!!session);
+
+  // Auto-open once per browser session (not once per mount — React Router
+  // unmounts/remounts this page on every navigation away and back, so a
+  // plain "haven't shown it yet this mount" flag would reopen the modal
+  // on every single revisit to the dashboard, which is exactly the
+  // "don't repeatedly force the modal" behavior this is required to
+  // avoid) for an admin who still has the default credentials. Dismissing
+  // it records that in sessionStorage and just closes the modal; the
+  // reminder card below stays put so the setup isn't lost, only deferred.
+  const [isCredentialsModalOpen, setIsCredentialsModalOpen] = useState(
+    () => Boolean(admin && !hasCompletedCredentialsSetup && !wasCredentialsSetupDismissedThisSession(admin.id)),
+  );
+
+  const closeCredentialsModal = () => {
+    setIsCredentialsModalOpen(false);
+    if (admin) markCredentialsSetupDismissedThisSession(admin.id);
+  };
 
   const deviceChartData = DEVICE_STATUSES.map((status) => ({
     status: t(`deviceStatus.${status}`),
@@ -51,6 +76,43 @@ export default function AdminDashboardPage() {
             {t("common.logout")}
           </Button>
         </header>
+
+        {admin && (
+          <Card className="flex flex-col gap-2">
+            {hasCompletedCredentialsSetup ? (
+              <>
+                <h2 className="text-sm font-medium text-ink">
+                  {t("adminAccountSetup.dashboardTitleComplete")}
+                </h2>
+                <p className="text-sm text-muted">
+                  {t("adminAccountSetup.dashboardDescriptionComplete")}
+                </p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-sm font-medium text-ink">
+                  {t("adminAccountSetup.dashboardTitleIncomplete")}
+                </h2>
+                <p className="text-sm text-muted">
+                  {t("adminAccountSetup.dashboardDescriptionIncomplete")}
+                </p>
+                <div>
+                  <Button onClick={() => setIsCredentialsModalOpen(true)}>
+                    {t("adminAccountSetup.changeButton")}
+                  </Button>
+                </div>
+              </>
+            )}
+          </Card>
+        )}
+
+        {admin && (
+          <AdminCredentialsSetupModal
+            open={isCredentialsModalOpen}
+            onClose={closeCredentialsModal}
+            currentUsername={admin.username}
+          />
+        )}
 
         <OnboardingChecklist
           progress={onboardingProgress}

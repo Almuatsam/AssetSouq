@@ -72,6 +72,9 @@
 - username
 - passwordHash
 - lastLogin
+- credentialsChangedAt (nullable — set once, permanently, when this admin
+  completes the one-time default-credential handover; see
+  backend/src/services/adminAccountService.ts)
 
 ## AuditLog
 - id
