@@ -32,9 +32,15 @@ export function signToken(payload: TokenPayload): string {
   return jwt.sign(payload, env.jwtSecret, options);
 }
 
-export function verifyToken(token: string): TokenPayload {
+// jsonwebtoken merges standard registered claims (iat, exp) into the
+// decoded object alongside whatever payload was signed — `iat` in
+// particular is read by the auth middleware's admin session-invalidation
+// check (see utils/adminSessionInvalidation.ts).
+export type VerifiedTokenPayload = TokenPayload & { iat: number; exp: number };
+
+export function verifyToken(token: string): VerifiedTokenPayload {
   // Throws JsonWebTokenError/TokenExpiredError on invalid/expired tokens —
   // callers (auth middleware) are responsible for catching and mapping to
   // a 401 response.
-  return jwt.verify(token, env.jwtSecret, { algorithms: [JWT_ALGORITHM] }) as TokenPayload;
+  return jwt.verify(token, env.jwtSecret, { algorithms: [JWT_ALGORITHM] }) as VerifiedTokenPayload;
 }

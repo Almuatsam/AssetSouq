@@ -77,6 +77,46 @@
     "devicesByStatus": "Devices by Status",
     "registrationsByStatus": "Registrations by Status"
   },
+  "adminAccountSetup": {
+    "dashboardTitleIncomplete": "Admin Account Setup",
+    "dashboardDescriptionIncomplete": "Your system is using the initial administrator credentials. Complete the one-time account setup.",
+    "changeButton": "Change Admin Credentials",
+    "dashboardTitleComplete": "Account Security",
+    "dashboardDescriptionComplete": "Account setup is complete — the default credentials are no longer active.",
+    "modalTitle": "Complete Admin Account Setup",
+    "modalDescription": "For security, replace the default administrator credentials with your company's credentials. This action can only be completed once.",
+    "currentUsernameLabel": "Current username",
+    "newUsernameLabel": "New username",
+    "newPasswordLabel": "New password",
+    "confirmPasswordLabel": "Confirm new password",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "passwordStrength": {
+      "empty": "Enter a password",
+      "weak": "Weak password",
+      "fair": "Fair password",
+      "strong": "Strong password"
+    },
+    "passwordRequirements": "Must be at least 12 characters and include an uppercase letter, a lowercase letter, and a number.",
+    "cancel": "Cancel",
+    "submit": "Change Credentials",
+    "confirmTitle": "Confirm credential change",
+    "confirmMessage": "Are you sure you want to change the administrator credentials? This action can only be completed once.",
+    "confirmBack": "Back",
+    "confirmSubmit": "Yes, Change Credentials",
+    "successMessage": "Administrator credentials updated. Please log in with your new credentials.",
+    "errors": {
+      "usernameRequired": "Username is required",
+      "usernameTooLong": "Username must be at most 191 characters",
+      "passwordTooShort": "Password must be at least 12 characters",
+      "passwordTooLong": "Password must be at most 72 characters",
+      "passwordNeedsLowercase": "Password must include a lowercase letter",
+      "passwordNeedsUppercase": "Password must include an uppercase letter",
+      "passwordNeedsNumber": "Password must include a number",
+      "confirmRequired": "Please confirm the new password",
+      "passwordsDoNotMatch": "Passwords do not match"
+    }
+  },
   "deviceStatus": {
     "AVAILABLE": "Available",
     "REMOVED": "Removed",
@@ -373,7 +413,7 @@
       },
       "account": {
         "title": "Signing out",
-        "body": "Your admin account also has a password, though there's no self-service way to change it yet — reach out to have it reset if you ever need to."
+        "body": "Your admin account also has a password. If you're still using the default setup credentials, the dashboard has a one-time prompt to replace them — beyond that, there's no self-service way to change it yet, so reach out to have it reset if you ever need to."
       },
       "helpMenu": {
         "title": "Help is always nearby",

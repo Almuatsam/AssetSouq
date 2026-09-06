@@ -13,6 +13,20 @@ export async function loginAsAdmin(page: Page, username: string, password: strin
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: /log in/i }).click();
   await page.waitForURL("**/admin/dashboard");
+
+  // The seed admin (whatever SEED_ADMIN_USERNAME/PASSWORD point at)
+  // never completes the one-time credential handover across this suite's
+  // run — every other spec needs those same credentials to keep working
+  // for the rest of the run (see tests/adminCredentialsSetup.spec.ts's
+  // own comment on why it deliberately never submits the real change) —
+  // so the dashboard's auto-opened setup modal
+  // (components/AdminCredentialsSetupModal.tsx) would otherwise sit on
+  // top of the page and block every other test's post-login
+  // interactions. Dismiss it here, once, for every caller.
+  const setupDialog = page.getByRole("dialog", { name: /complete admin account setup/i });
+  if (await setupDialog.isVisible().catch(() => false)) {
+    await setupDialog.getByRole("button", { name: /^cancel$/i }).click();
+  }
 }
 
 export async function loginAsEmployee(page: Page, staffNumber: string): Promise<void> {

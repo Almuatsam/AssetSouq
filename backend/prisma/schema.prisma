@@ -155,6 +155,16 @@ model Admin {
   passwordHash String
   lastLogin    DateTime?
 
+  // Null until this admin completes the one-time default-credential
+  // handover (see services/adminAccountService.ts); non-null (the
+  // completion timestamp) forever after, at which point the handover
+  // endpoint permanently refuses to run again for this admin — the
+  // backend, not the frontend, is the source of truth for that gate. Same
+  // nullable-DateTime-as-flag convention already used elsewhere in this
+  // schema (Winner.paymentDate, Winner.handoverDate,
+  // OnboardingProgress.tourCompletedAt) rather than a plain boolean.
+  credentialsChangedAt DateTime?
+
   draws              Draw[]
   auditLogs          AuditLog[]
   onboardingProgress OnboardingProgress?

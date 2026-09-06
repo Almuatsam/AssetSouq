@@ -287,7 +287,7 @@ describe("useTour", () => {
     // Arrange
     const adminSession: AuthSession = {
       token: "tok",
-      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null } },
+      user: { role: "ADMIN", admin: { id: 1, username: "admin1", lastLogin: null, credentialsChangedAt: null } },
     };
     localStorage.setItem("assetsouq.auth", JSON.stringify(adminSession));
     mockedService.getMine.mockResolvedValue(notStartedProgress());

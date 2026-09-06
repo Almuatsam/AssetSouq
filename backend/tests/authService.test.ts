@@ -31,6 +31,7 @@ const baseAdmin = {
   username: "admin1",
   passwordHash: "hashed-password",
   lastLogin: null,
+  credentialsChangedAt: null,
 };
 
 describe("authService.loginEmployee", () => {
@@ -88,7 +89,12 @@ describe("authService.loginAdmin", () => {
 
     // Assert
     expect(result.token).toEqual(expect.any(String));
-    expect(result.admin).toEqual({ id: 1, username: "admin1", lastLogin: loginTimestamp });
+    expect(result.admin).toEqual({
+      id: 1,
+      username: "admin1",
+      lastLogin: loginTimestamp,
+      credentialsChangedAt: null,
+    });
     expect((result.admin as Record<string, unknown>).passwordHash).toBeUndefined();
     expect(mockedAdminRepo.updateLastLogin).toHaveBeenCalledWith(1);
   });

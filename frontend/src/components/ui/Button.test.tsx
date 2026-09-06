@@ -45,4 +45,22 @@ describe("Button", () => {
     // Assert
     expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
   });
+
+  it("defaults to the primary variant's styling", () => {
+    // Act
+    render(<Button>Save</Button>);
+
+    // Assert
+    expect(screen.getByRole("button", { name: "Save" })).toHaveClass("bg-primary");
+  });
+
+  it("applies the secondary variant's outline styling instead of the primary fill", () => {
+    // Act
+    render(<Button variant="secondary">Cancel</Button>);
+
+    // Assert
+    const button = screen.getByRole("button", { name: "Cancel" });
+    expect(button).toHaveClass("border-border");
+    expect(button).not.toHaveClass("bg-primary");
+  });
 });

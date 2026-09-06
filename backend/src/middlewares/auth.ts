@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 
 import type { AuthRole } from "../types/express";
+import { isAdminTokenStillValid } from "../utils/adminSessionInvalidation";
 import { verifyToken } from "../utils/jwt";
 import { AppError } from "./errorHandler";
 
@@ -20,7 +21,20 @@ export function authenticate(req: Request, _res: Response, next: NextFunction): 
   }
 
   try {
-    req.user = verifyToken(token);
+    const decoded = verifyToken(token);
+
+    // Admin tokens only — see utils/adminSessionInvalidation.ts. A stale
+    // admin token (issued before that admin completed the one-time
+    // credential handover) is rejected here even though its signature
+    // and expiry are still otherwise valid. Employee tokens never go
+    // through this check; the invalidation map is never populated for
+    // anything but an admin id, so this is a no-op until that flow runs.
+    if (decoded.role === "ADMIN" && !isAdminTokenStillValid(decoded.id, decoded.iat)) {
+      next(new AppError(401, "Session expired — please log in again"));
+      return;
+    }
+
+    req.user = decoded;
     next();
   } catch {
     next(new AppError(401, "Invalid or expired token"));
